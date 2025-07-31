@@ -23,23 +23,30 @@ private def quoteArray (a : Array Term) : Term :=
     let e := Syntax.mkCApp ``Array.mkEmpty #[quote a.size]
     a.foldl (init := e) fun t a => Syntax.mkCApp ``Array.push #[t, a]
 
-namespace TypeExpr
+namespace NodeId
 
-protected def quote : TypeExpr → Term
-| .ident nm a =>
+instance : Quote NodeId where
+  quote n := Syntax.mkCApp ``NodeId.mk #[quote n.value]
+
+end NodeId
+
+namespace TypeExprF
+
+protected def quote {α} [Quote α] : TypeExprF α → Term
+| .ident n nm a =>
   let a := a.map (·.quote)
-  Syntax.mkCApp ``ident #[quote nm, quoteArray a]
-| .bvar idx => Syntax.mkCApp ``bvar #[quote idx]
-| .fvar idx a =>
+  Syntax.mkCApp ``ident #[quote n, quote nm, quoteArray a]
+| .bvar n idx => Syntax.mkCApp ``bvar #[quote n, quote idx]
+| .fvar n idx a =>
   let a := a.map (·.quote)
-  Syntax.mkCApp ``fvar #[quote idx, quoteArray a]
-| .arrow a r => Syntax.mkCApp ``arrow #[a.quote, r.quote]
+  Syntax.mkCApp ``fvar #[quote n, quote idx, quoteArray a]
+| .arrow n a r => Syntax.mkCApp ``arrow #[quote n, a.quote, r.quote]
 termination_by e => e
 
-instance : Quote TypeExpr where
-  quote := TypeExpr.quote
+instance {α} [Quote α] : Quote (TypeExprF α) where
+  quote := TypeExprF.quote
 
-end TypeExpr
+end TypeExprF
 
 namespace PreType
 

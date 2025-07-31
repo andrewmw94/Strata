@@ -23,33 +23,43 @@ private def arrayToExpr (type : Lean.Expr) (a : Array Lean.Expr) : Lean.Expr :=
   let pushFn := mkApp (mkConst ``Array.push [levelZero]) type
   a.foldl (init := init) (mkApp2 pushFn)
 
+namespace QualifiedIdent
+
 instance : ToExpr QualifiedIdent where
   toTypeExpr := mkConst ``QualifiedIdent
   toExpr i := mkApp2 (mkConst ``QualifiedIdent.mk) (toExpr i.dialect) (toExpr i.name)
 
-namespace TypeExpr
+end QualifiedIdent
+
+namespace NodeId
+
+instance : ToExpr NodeId where
+  toTypeExpr := mkConst ``NodeId
+  toExpr n := mkApp (mkConst ``mk) (toExpr n.value)
+
+end NodeId
+
+def astExpr (nm : Name) (n : NodeId) (args : Array Lean.Expr) : Lean.Expr :=
+  mkAppN (mkApp (mkConst nm) (toExpr n)) args
+
+namespace TypeExprF
 
 protected def typeExpr : Lean.Expr := mkConst ``TypeExpr
 
 protected def toExpr : TypeExpr → Lean.Expr
-| .ident nm a =>
-  mkApp2
-    (mkConst ``TypeExpr.ident)
-    (toExpr nm)
-    (arrayToExpr TypeExpr.typeExpr (a.map (·.toExpr)))
-| .bvar idx => mkApp (mkConst ``TypeExpr.bvar) (toExpr idx)
-| .fvar idx a =>
-  mkApp2
-    (mkConst ``TypeExpr.fvar)
-    (toExpr idx)
-    (arrayToExpr TypeExpr.typeExpr (a.map (·.toExpr)))
-| .arrow a r => mkApp2 (mkConst ``arrow) a.toExpr r.toExpr
+| .ident n nm a =>
+  astExpr ``ident n #[toExpr nm,  (arrayToExpr TypeExprF.typeExpr (a.map (·.toExpr)))]
+| .bvar n idx =>
+  astExpr ``bvar n #[toExpr idx]
+| .fvar n idx a =>
+  astExpr ``fvar n #[toExpr idx, arrayToExpr TypeExprF.typeExpr (a.map (·.toExpr))]
+| .arrow n a r => astExpr ``arrow n #[a.toExpr, r.toExpr]
 
 instance : ToExpr TypeExpr where
-  toTypeExpr := TypeExpr.typeExpr
-  toExpr := TypeExpr.toExpr
+  toTypeExpr := TypeExprF.typeExpr
+  toExpr := TypeExprF.toExpr
 
-end TypeExpr
+end TypeExprF
 
 namespace PreType
 
@@ -222,8 +232,9 @@ instance : ToExpr (DebruijnIndex n) where
 
 end DebruijnIndex
 
-protected
-def ValueBindingSpec.toExpr {bindings} (b : ValueBindingSpec bindings) (bindingsExpr : Lean.Expr) : Lean.Expr :=
+namespace ValueBindingSpec
+
+protected def toExpr {argDecls} (b : ValueBindingSpec argDecls) (bindingsExpr : Lean.Expr) : Lean.Expr :=
   mkAppN (mkConst ``ValueBindingSpec.mk) #[
     bindingsExpr,
     toExpr b.nameIndex,
@@ -232,14 +243,19 @@ def ValueBindingSpec.toExpr {bindings} (b : ValueBindingSpec bindings) (bindings
     toExpr b.allowCat
   ]
 
-protected
-def TypeBindingSpec.toExpr (b : TypeBindingSpec bindings) (bindingsExpr : Lean.Expr) : Lean.Expr :=
+end ValueBindingSpec
+
+namespace TypeBindingSpec
+
+protected def toExpr (b : TypeBindingSpec bindings) (bindingsExpr : Lean.Expr) : Lean.Expr :=
   mkAppN (mkConst ``TypeBindingSpec.mk) #[
     bindingsExpr,
     toExpr b.nameIndex,
     toExpr b.argsIndex,
     toExpr b.defIndex
   ]
+
+end TypeBindingSpec
 
 namespace BindingSpec
 
@@ -252,7 +268,9 @@ def toExpr (bi : BindingSpec bindings) (bindingsExpr : Lean.Expr) : Lean.Expr :=
 
 end BindingSpec
 
-instance OpDecl.instToExpr : ToExpr OpDecl where
+namespace OpDecl
+
+instance : ToExpr OpDecl where
   toTypeExpr := mkConst ``OpDecl
   toExpr d :=
     let be := toExpr d.argDecls
@@ -265,13 +283,23 @@ instance OpDecl.instToExpr : ToExpr OpDecl where
       arrayToExpr (BindingSpec.typeExpr be) (d.newBindings.map (·.toExpr be))
     ]
 
-instance TypeDecl.instToExpr : ToExpr TypeDecl where
-  toTypeExpr := mkConst ``TypeDecl
-  toExpr d := mkApp2 (mkConst ``TypeDecl.mk) (toExpr d.name) (toExpr d.argNames)
+end OpDecl
 
-instance FunctionDecl.instToExpr : ToExpr FunctionDecl where
+namespace TypeDecl
+
+instance : ToExpr TypeDecl where
+  toTypeExpr := mkConst ``TypeDecl
+  toExpr d := mkApp2 (mkConst ``mk) (toExpr d.name) (toExpr d.argNames)
+
+end TypeDecl
+
+namespace FunctionDecl
+
+instance : ToExpr FunctionDecl where
   toTypeExpr := mkConst ``FunctionDecl
-  toExpr d := mkAppN (mkConst ``FunctionDecl.mk) #[toExpr d.name, toExpr d.argDecls, toExpr d.result, toExpr d.syntaxDef, toExpr d.metadata]
+  toExpr d := mkAppN (mkConst ``mk) #[toExpr d.name, toExpr d.argDecls, toExpr d.result, toExpr d.syntaxDef, toExpr d.metadata]
+
+end FunctionDecl
 
 namespace MetadataArgType
 

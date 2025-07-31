@@ -16,6 +16,22 @@ open Strata.Parser (DeclParser InputContext ParserState)
 
 namespace Strata
 
+namespace TypeExprF
+
+/-
+This applies global context to instantiate types and variables.
+
+Free type alias variables bound to alias
+-/
+protected def instType (d : TypeExprF α) (bindings : Array (TypeExprF α)) : TypeExprF α := Id.run <|
+  d.instTypeM fun n idx =>
+    if p : idx < bindings.size then
+      pure <| bindings[bindings.size - (idx+1)]
+    else
+      .bvar n (idx - bindings.size)
+
+end TypeExprF
+
 /--
 Get the kind as a qualified identifier.
 -/
@@ -25,22 +41,25 @@ def qualIdentKind (stx : Syntax) : Option QualifiedIdent :=
   else
     none
 
-partial def expandMacros (m : DialectMap) (f : PreType) (args : Nat → Option Arg) : Except Unit TypeExpr :=
+partial def expandMacros (dm : DialectMap) (f : PreType) (args : Nat → Option Arg) : Except Unit TypeExpr :=
   match f with
-  | .ident i a => .ident i <$> a.mapM fun e => expandMacros m e args
-  | .arrow a b => .arrow <$> expandMacros m a args <*> expandMacros m b args
-  | .fvar i a => .fvar i <$> a.mapM fun e => expandMacros m e args
-  | .bvar idx => pure (.bvar idx)
+  | .ident i a => .ident sorry i <$> a.mapM fun e => expandMacros dm e args
+  | .arrow a b => .arrow sorry <$> expandMacros dm a args <*> expandMacros dm b args
+  | .fvar i a => .fvar sorry i <$> a.mapM fun e => expandMacros dm e args
+  | .bvar idx => pure (.bvar sorry idx)
   | .funMacro i r => do
-    let r ← expandMacros m r args
+    let r ← expandMacros dm r args
     match args i with
     | none =>
       .error ()
     | some a =>
-      let addType tps _ s args := tps.push (resolveBindingType m s args)
-      let argTypes := foldArgBindingSpecs m addType (init := #[]) a
+      let addType tps _ s args :=
+        match resolveBindingIndices dm s args with
+        | .expr tp => tps.push tp
+        | .type _ _ => panic! s!"Expected binding to be expression."
+      let argTypes := foldOverArgBindingSpecs dm addType (init := #[]) a
       --let argTypes := foldOverArgAtLevel m addType (init := #[]) bindings args level
-      pure <| argTypes.foldr (init := r) .arrow
+      pure <| argTypes.foldr (init := r) (.arrow sorry)
 
 namespace Elab
 
@@ -100,7 +119,7 @@ def resolveTypeBinding (tctx : TypingContext) (stx : Syntax) (name : String)
       logErrorMF a.info.stx mf!"Unexpected arguments to {name}."
       return default
     if let .type [] _ := k then
-      let info : TypeInfo := { inputCtx := tctx, stx := stx, typeExpr := .bvar idx, isInferred := false }
+      let info : TypeInfo := { inputCtx := tctx, stx := stx, typeExpr := .bvar sorry idx, isInferred := false }
       return .node (.ofTypeInfo info) #[]
     else
       logErrorMF stx mf!"Expected a type instead of {k}"
@@ -122,7 +141,7 @@ def resolveTypeBinding (tctx : TypingContext) (stx : Syntax) (name : String)
             | logErrorMF c.info.stx mf!"Expected type"
           tpArgs := tpArgs.push cinfo.typeExpr
           children := children.push c
-        let tp :=  .fvar fidx tpArgs
+        let tp :=  .fvar sorry fidx tpArgs
         let info : TypeInfo := { inputCtx := tctx, stx := stx, typeExpr := tp, isInferred := false }
         return .node (.ofTypeInfo info) children
       else if let some a := args[params.size]? then
@@ -209,7 +228,7 @@ def translateTypeIdent (elabInfo : ElabInfo) (qualIdentInfo : Tree) (args : Arra
   | .type decl =>
     checkArgSize stx ident decl.argNames.size args
     let tpArgs ← args.mapM fun a => return (← asTypeInfo a).typeExpr
-    let tp := .ident ident tpArgs
+    let tp := .ident sorry ident tpArgs
     let info : TypeInfo := { toElabInfo := elabInfo, typeExpr := tp, isInferred := false }
     return .node (.ofTypeInfo info) args
   | .syncat decl =>
@@ -238,16 +257,16 @@ the root is in a normal for,.
 
 N.B. This expects that macros have already been expanded in e.
 -/
-partial def grnf (gctx : GlobalContext) (e : TypeExpr) : TypeExpr :=
+partial def headExpandTypeAlias (gctx : GlobalContext) (e : TypeExpr) : TypeExpr :=
   match e with
-  | .arrow _ _ | .ident _ _ | .bvar _ => e
-  | .fvar idx args =>
+  | .arrow .. | .ident .. | .bvar .. => e
+  | .fvar _ idx args =>
     match gctx.kindOf! idx with
     | .expr _ => panic! "Type free variable bound to expression."
     | .type params (some d) =>
       assert! params.length = args.size
       assert! !d.hasUnboundVar (bindingCount := args.size)
-      grnf gctx (d.instType args)
+      headExpandTypeAlias gctx (d.instType args)
     | .type _ none => e
 
 /--
@@ -256,8 +275,8 @@ the root is in a normal form.
 -/
 partial def rnf (tctx : TypingContext) (e : TypeExpr) : TypeExpr :=
   match e with
-  | .arrow _ _ | .ident _ _ => e
-  | .fvar idx args =>
+  | .arrow .. | .ident .. => e
+  | .fvar _ idx args =>
     let gctx := tctx.globalContext
     match gctx.kindOf! idx with
     | .expr _ => panic! "Type free variable bound to expression."
@@ -266,7 +285,7 @@ partial def rnf (tctx : TypingContext) (e : TypeExpr) : TypeExpr :=
       assert! !d.hasUnboundVar (bindingCount := args.size)
       rnf (.empty gctx) (d.instType args)
     | .type _ none => e
-  | .bvar idx =>
+  | .bvar _ idx =>
     match tctx.bindings[tctx.bindings.size - 1 - idx]!.kind with
     | .type params (some d) =>
       assert! params.isEmpty
@@ -286,7 +305,7 @@ partial def checkExpressionType (tctx : TypingContext) (itype rtype : TypeExpr) 
   let itype := rnf tctx itype
   let rtype := rnf tctx rtype
   match itype, rtype with
-  | .ident iq ia, .ident rq ra =>
+  | .ident _ iq ia, .ident _ rq ra =>
     if p : iq = rq ∧ ia.size = ra.size then do
       for i in Fin.range ia.size do
         if !(← checkExpressionType tctx ia[i] ra[i]) then
@@ -294,9 +313,9 @@ partial def checkExpressionType (tctx : TypingContext) (itype rtype : TypeExpr) 
       return true
     else
       return false
-  | .bvar ii, .bvar ri =>
+  | .bvar _ ii, .bvar _ ri =>
     return ii = ri
-  | .fvar ii ia, .fvar ri ra =>
+  | .fvar _ ii ia, .fvar _ ri ra =>
     if p : ii = ri ∧ ia.size = ra.size then do
       for i in Fin.range ia.size do
         if !(← checkExpressionType tctx ia[i] ra[i]) then
@@ -304,7 +323,7 @@ partial def checkExpressionType (tctx : TypingContext) (itype rtype : TypeExpr) 
       return true
     else
       return false
-  | .arrow ia ir, .arrow ra rr =>
+  | .arrow _ ia ir, .arrow _ ra rr =>
     return (← checkExpressionType tctx ia ra)
         && (← checkExpressionType tctx ir rr)
   | _, _ =>
@@ -355,12 +374,12 @@ partial def unifyTypes
     : ElabM (Vector (Option Tree) b.size) :=
   let ⟨argLevel, argLevelP⟩ := argLevel0
   -- Expand defined free vars at root to get head norm form
-  let expectedType := grnf tctx.globalContext expectedType
+  let expectedType := headExpandTypeAlias tctx.globalContext expectedType
   match expectedType with
-  | .ident eid ea => do
+  | .ident _ eid ea => do
     let ih := rnf tctx inferredType
     match ih with
-    | .ident iid ia =>
+    | .ident _ iid ia =>
       if eid != iid then
         logErrorMF exprSyntax mf!"Encountered {ih} expression when {expectedType} expected."
         return args
@@ -369,9 +388,9 @@ partial def unifyTypes
     | _ =>
       logErrorMF exprSyntax mf!"Encountered {ih} expression when {expectedType} expected."
       return args
-  | .fvar eid ea =>
+  | .fvar _ eid ea =>
     match rnf tctx inferredType with
-    | .fvar iid ia => do
+    | .fvar _ iid ia => do
       if eid != iid then
         logErrorMF exprSyntax mf!"Encountered {inferredType} expression when {expectedType} expected."
         return args
@@ -380,7 +399,7 @@ partial def unifyTypes
     | ih => do
       logErrorMF exprSyntax mf!"Encountered {ih} expression when {expectedType} expected."
       return args
-  | .bvar idx => do
+  | .bvar _ idx => do
     let .isTrue idxP := inferInstanceAs (Decidable (idx < argLevel))
       | return panic! "Invalid index"
     let typeLevel := argLevel - (idx + 1)
@@ -399,12 +418,12 @@ partial def unifyTypes
       if !(← checkExpressionType tctx inferredType info.typeExpr) then
         logErrorMF exprSyntax mf!"Expression has type {withBindings tctx.bindings (mformat inferredType)} when {withBindings tctx.bindings (mformat info.typeExpr)} expected."
       pure args
-  | .arrow ea er =>
+  | .arrow _ ea er =>
     match inferredType with
-    | .ident .. | .bvar _ | .fvar .. => do
+    | .ident .. | .bvar .. | .fvar .. => do
       logErrorMF exprSyntax mf!"Expected {expectedType} when {inferredType} found"
       pure args
-    | .arrow ia ir => do
+    | .arrow _ ia ir => do
       let res ← unifyTypes b argLevel0 ea tctx exprSyntax ia args
       unifyTypes b argLevel0 er tctx exprSyntax ir res
 
@@ -599,7 +618,7 @@ def translateTypeExpr (tree : Tree) : ElabM TypeExpr := do
       let args ← args.attach.mapM fun ⟨a, _⟩ =>
         have p : sizeOf a < sizeOf args := by decreasing_tactic
         translateTypeExpr a
-      return .ident qname args
+      return .ident sorry qname args
     | _ =>
       logError ident.info.stx s!"Expected type"; pure default
   | q`Init.TypeArrow, #[aTree, rTree] => do
@@ -607,7 +626,7 @@ def translateTypeExpr (tree : Tree) : ElabM TypeExpr := do
     let aType ← translateTypeExpr aTree
     have p : sizeOf rTree < sizeOf argChildren := by decreasing_tactic
     let rType ← translateTypeExpr rTree
-    return .arrow aType rType
+    return .arrow sorry aType rType
 
   | q`StrataDDL.TypeFn, #[bindingsTree, valTree] =>
     logError argInfo.stx s!"Macros not supported"
@@ -636,7 +655,7 @@ partial def translateBindingKind (tree : Tree) : ElabM BindingKind := do
     | .type decl =>
       checkArgSize argInfo.stx qname decl.argNames.size args
       let args ← args.mapM translateTypeExpr
-      return .expr (.ident qname args)
+      return .expr (.ident sorry qname args)
     | .syncat decl =>
       checkArgSize argInfo.stx qname decl.argNames.size args
       let r : SyntaxCat := .atom qname
@@ -646,7 +665,7 @@ partial def translateBindingKind (tree : Tree) : ElabM BindingKind := do
   | q`Init.TypeArrow, #[aTree, rTree] => do
     let aType ← translateTypeExpr aTree
     let rType ← translateTypeExpr rTree
-    pure <| .expr <| .arrow aType rType
+    pure <| .expr <| .arrow sorry aType rType
   | q`StrataDDL.TypeFn, _ => do
     logError argInfo.stx s!"Macros not supported"
     pure default
@@ -679,7 +698,7 @@ def evalBindingSpec
     let kind ←
           match typeTree.info with
           | .ofTypeInfo info =>
-            pure <| .expr (.mkFunType bindings info.typeExpr)
+            pure <| .expr (.mkFunType sorry bindings info.typeExpr)
           | .ofCatInfo info =>
             if !b.allowCat then
               panic! s!"Cannot bind {ident} unexpected category {repr info.cat}"
@@ -727,7 +746,7 @@ def applyNArgs (tctx : TypingContext) (e : TypeExpr) (n : Nat) := aux #[] e
   where aux (args : Array TypeExpr) (e : TypeExpr) : Except (Array TypeExpr × TypeExpr) (Vector TypeExpr n × TypeExpr) :=
     if argsLt : args.size < n then
       match rnf tctx e with
-      | .arrow a r => aux (args.push a) r
+      | .arrow _ a r => aux (args.push a) r
       | e => .error (args, e)
     else
       if argsGt : args.size > n then
@@ -745,7 +764,11 @@ def resultType! (tctx : TypingContext) (e : TypeExpr) (n : Nat) : TypeExpr :=
   | .ok (_, r) => r
   | .error (n, _) => panic! s!"{n.size} unexpected arguments to function."
 
+/--
+Returns the type of `e` in typing context `tctx`.
+-/
 partial def inferType (tctx : TypingContext) (e : Expr) : ElabM TypeExpr := do
+  -- Compute head normal form of e.
   let ⟨f, a⟩ := e.hnf
   match f with
   | .bvar idx => do
@@ -775,7 +798,7 @@ partial def inferType (tctx : TypingContext) (e : Expr) : ElabM TypeExpr := do
       some a.val[fnArgCount - i - 1]!
     let .ok tp := mtp
         | return panic! "Unexpected expandMacros failure."
-    let tp := Id.run <| tp.instTypeM fun i =>
+    let tp := Id.run <| tp.instTypeM fun _ i =>
         assert! i < fnArgCount
         let lvl := fnArgCount - i - 1
         match a.val[lvl]! with
@@ -806,7 +829,7 @@ partial def translateTypeTree (arg : Tree) : ElabM Tree := do
       let rType ← translateTypeTree rTree
       let .ofTypeInfo rInfo := rType.info
         | logError rType.info.stx s!"Expected type"; return default
-      let tp := .arrow aInfo.typeExpr rInfo.typeExpr
+      let tp := .arrow sorry aInfo.typeExpr rInfo.typeExpr
       let info : TypeInfo := { toElabInfo := info.toElabInfo, typeExpr := tp, isInferred := false }
       return .node (.ofTypeInfo info) #[aType, rType]
     | _, _ =>

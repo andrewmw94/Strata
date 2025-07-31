@@ -27,7 +27,7 @@ over the parameters.
 Variable belongs to the particular category below.
 -/
 | cat (k : SyntaxCat)
-deriving BEq, Inhabited, Repr
+deriving Inhabited, Repr
 
 namespace BindingKind
 
@@ -60,7 +60,7 @@ all have the same type and metadata.
 structure Binding where
   ident : Var
   kind : BindingKind
-deriving Inhabited, Repr, BEq
+deriving Inhabited, Repr
 
 /--
 A sequence of bindings.
@@ -71,7 +71,6 @@ index of the binder for them.
 structure Bindings where
   ofArray ::
   toArray : Array Binding
-  deriving BEq
 
 namespace Bindings
 

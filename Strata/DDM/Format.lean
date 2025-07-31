@@ -213,20 +213,20 @@ instance : ToStrataFormat QualifiedIdent where
     else
       .atom f!"{ident.dialect}.{ident.name}"
 
-namespace TypeExpr
+namespace TypeExprF
 
-protected def mformat : TypeExpr → StrataFormat
-| .ident tp a => a.attach.foldl (init := mformat tp) fun m ⟨e, _⟩ =>
+protected def mformat : TypeExprF α → StrataFormat
+| .ident _ tp a => a.attach.foldl (init := mformat tp) fun m ⟨e, _⟩ =>
   mf!"{m} {e.mformat.ensurePrec (appPrec + 1)}".setPrec appPrec
-| .bvar idx => .bvar idx
-| .fvar idx a => a.attach.foldl (init := .fvar idx) fun m ⟨e, _⟩ =>
+| .bvar _ idx => .bvar idx
+| .fvar _ idx a => a.attach.foldl (init := .fvar idx) fun m ⟨e, _⟩ =>
   mf!"{m} {e.mformat.ensurePrec (appPrec + 1)}".setPrec appPrec
-| .arrow a r => mf!"{a.mformat.ensurePrec (arrowPrec+1)} -> {r.mformat.ensurePrec arrowPrec}"
+| .arrow _ a r => mf!"{a.mformat.ensurePrec (arrowPrec+1)} -> {r.mformat.ensurePrec arrowPrec}"
 
-instance : ToStrataFormat TypeExpr where
+instance : ToStrataFormat (TypeExprF α) where
   mformat e := e.mformat
 
-end TypeExpr
+end TypeExprF
 
 namespace PreType
 
