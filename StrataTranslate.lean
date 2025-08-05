@@ -5,11 +5,8 @@
 -/
 
 -- Executable for verifying a Strata program from a file.
-import Strata.Languages.Boogie.Verifier
-import Strata.Languages.C_Simp.Verify
+import Strata.Dyn.py_ast
 import Std.Internal.Parsec
-
-open Strata
 
 
 def usageMessage : String :=
@@ -26,10 +23,14 @@ spec {
 };
 "
 
-def main (args : List String) : IO UInt32 := do
-  if args.length != 1 then
-    IO.print usageMessage
-    return 1
-  else
-    IO.print output
-    return 0
+def translate_py_to_boogie (m: Module) : String :=
+  output
+
+def main (args : List String) : IO Unit := do
+  -- Need to use the Lean-compatible JSON format
+  match args with
+  | [filename] =>
+    let ast ← loadJsonFile filename
+    let boogie_prog := (translate_py_to_boogie ast)
+    IO.println boogie_prog
+  | _ => IO.println "Usage: Executable filename"
