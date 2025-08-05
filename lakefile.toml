@@ -1,6 +1,6 @@
 name = "Strata"
 version = "0.1.0"
-defaultTargets = ["Strata", "StrataVerify"]
+defaultTargets = ["Strata", "StrataVerify", "StrataTranslate"]
 testDriver = "StrataTest"
 
 [[lean_lib]]
@@ -12,3 +12,6 @@ globs = ["StrataTest.+"]
 
 [[lean_exe]]
 name = "StrataVerify"
+
+[[lean_exe]]
+name = "StrataTranslate"
