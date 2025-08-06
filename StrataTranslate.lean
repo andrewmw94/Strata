@@ -6,25 +6,13 @@
 
 -- Executable for verifying a Strata program from a file.
 import Strata.Dyn.py_ast
+import Strata.Dyn.Py_to_Boogie
 import Std.Internal.Parsec
 
 
 def usageMessage : String :=
   "Usage: StrataTranslate file.json"
 
-def output := r"
-procedure double(x : int) returns (ret : int)
-spec {
-  ensures (ret == 2*x);
-  ensures (old(count) + 1 == count);
-}
-{
-  ret := x + x;
-};
-"
-
-def translate_py_to_boogie (m: Module) : String :=
-  output
 
 def main (args : List String) : IO Unit := do
   -- Need to use the Lean-compatible JSON format

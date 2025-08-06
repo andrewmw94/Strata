@@ -17,7 +17,7 @@ deriving Repr
 
 -- Custom JSON parsing for ConstantValue
 instance : Lean.FromJson ConstantValue where
-  fromJson? json := 
+  fromJson? json :=
     match json with
     | Lean.Json.num n => Except.ok (ConstantValue.num n)
     | Lean.Json.str s => Except.ok (ConstantValue.str s)
@@ -26,7 +26,7 @@ instance : Lean.FromJson ConstantValue where
     | _ => Except.error "Invalid constant value"
 
 instance : Lean.ToJson ConstantValue where
-  toJson cv := 
+  toJson cv :=
     match cv with
     | ConstantValue.num n => Lean.Json.num n
     | ConstantValue.str s => Lean.Json.str s
@@ -112,7 +112,7 @@ mutual
     | Constant : Constant → Expression
     | BinOp : BinOp → Expression
     | Compare : Compare → Expression
-  deriving Repr, Lean.FromJson, Lean.ToJson
+  deriving Repr, Lean.ToJson
 
   -- Statements
   structure Assign extends BaseNode where
@@ -168,76 +168,6 @@ structure Module extends BaseNode where
   type_ignores : Array String := #[]
 deriving Repr, Lean.FromJson, Lean.ToJson
 
--- Utility functions for creating common nodes
-def mkLoadContext : ContextNode := 
-  ContextNode.Load { _type := "Load" }
-
-def mkStoreContext : ContextNode := 
-  ContextNode.Store { _type := "Store" }
-
-def mkAddOp : Operator := 
-  Operator.Add { _type := "Add" }
-
-def mkMultOp : Operator := 
-  Operator.Mult { _type := "Mult" }
-
-def mkLtOp : Operator := 
-  Operator.Lt { _type := "Lt" }
-
-def mkName (id : String) (ctx : ContextNode) : Expression :=
-  Expression.Name { _type := "Name", id := id, ctx := ctx }
-
-def mkConstant (value : ConstantValue) : Expression :=
-  Expression.Constant { _type := "Constant", value := value, kind := none }
-
-def mkBinOp (left : Expression) (op : Operator) (right : Expression) : Expression :=
-  Expression.BinOp { _type := "BinOp", left := left, op := op, right := right }
-
-def mkCompare (left : Expression) (ops : Array Operator) (comparators : Array Expression) : Expression :=
-  Expression.Compare { _type := "Compare", left := left, ops := ops, comparators := comparators }
-
-def mkAssign (targets : Array Expression) (value : Expression) : Statement :=
-  Statement.Assign { _type := "Assign", targets := targets, value := value, type_comment := none }
-
-def mkAugAssign (target : Expression) (op : Operator) (value : Expression) : Statement :=
-  Statement.AugAssign { _type := "AugAssign", target := target, op := op, value := value }
-
-def mkReturn (value : Option Expression := none) : Statement :=
-  Statement.Return { _type := "Return", value := value }
-
-def mkGlobal (names : Array String) : Statement :=
-  Statement.Global { _type := "Global", names := names }
-
-def mkWhile (test : Expression) (body : Array Statement) (orelse : Array Statement := #[]) : Statement :=
-  Statement.While { _type := "While", test := test, body := body, orelse := orelse }
-
-def mkFunctionDef (name : String) (args : Arguments) (body : Array Statement) : Statement :=
-  Statement.FunctionDef { 
-    _type := "FunctionDef", 
-    name := name, 
-    args := args, 
-    body := body, 
-    decorator_list := #[], 
-    returns := none, 
-    type_comment := none, 
-    type_params := #[] 
-  }
-
-def mkArg (arg : String) : Arg :=
-  { _type := "arg", arg := arg, annotation := none, type_comment := none }
-
-def mkArguments (args : Array Arg) : Arguments :=
-  { 
-    _type := "arguments", 
-    posonlyargs := #[], 
-    args := args, 
-    vararg := none, 
-    kwonlyargs := #[], 
-    kw_defaults := #[], 
-    kwarg := none, 
-    defaults := #[] 
-  }
-
 -- JSON loading utility
 def loadJsonFile (path : System.FilePath) : IO Module := do
   let contents ← IO.FS.readFile path
@@ -252,31 +182,3 @@ def loadJsonFile (path : System.FilePath) : IO Module := do
 def printToJson (module : Module) : IO Unit :=
   let s := (Lean.ToJson.toJson module).pretty
   IO.println s
-
--- Example usage demonstrating the AST construction
-def exampleModule : Module := {
-  _type := "Module",
-  body := #[
-    mkAssign 
-      #[mkName "count" mkStoreContext] 
-      (mkConstant (ConstantValue.num (Lean.JsonNumber.fromNat 0))),
-    mkFunctionDef 
-      "square" 
-      (mkArguments #[mkArg "x"])
-      #[
-        mkGlobal #["count"],
-        mkAugAssign 
-          (mkName "count" mkStoreContext) 
-          mkAddOp 
-          (mkConstant (ConstantValue.num (Lean.JsonNumber.fromNat 1))),
-        mkReturn (some (mkBinOp 
-          (mkName "x" mkLoadContext) 
-          mkMultOp 
-          (mkName "x" mkLoadContext)))
-      ]
-  ],
-  type_ignores := #[]
-}
-
--- Test the example
--- #eval printToJson exampleModule
