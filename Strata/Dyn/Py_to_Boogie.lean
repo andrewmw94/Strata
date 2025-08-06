@@ -66,62 +66,73 @@ mutual
             s!"({left} {op_str} {right})"
         | _, _ => left
 
-  -- Translate statements
-  partial def translate_statement (stmt: Statement) : String :=
+  -- Translate statements - now returns Option String
+  partial def translate_statement (stmt: Statement) : Option String :=
     match stmt with
     | Statement.Assign assign =>
         -- Handle simple assignment to first target
         match assign.targets[0]? with
         | some (Expression.Name name) =>
             let value := translate_expression assign.value
-            s!"  {name.id} := {value};"
-        | some _ => "  // Unsupported assignment target"
-        | none => "  // Empty assignment"
+            some s!"  {name.id} := {value};"
+        | some _ => some "  // Unsupported assignment target"
+        | none => some "  // Empty assignment"
     | Statement.AugAssign augassign =>
         match augassign.target with
         | Expression.Name name =>
             let value := translate_expression augassign.value
             let op := translate_operator augassign.op
-            s!"  {name.id} := {name.id} {op} {value};"
-        | _ => "  // Unsupported augmented assignment target"
+            some s!"  {name.id} := {name.id} {op} {value};"
+        | _ => some "  // Unsupported augmented assignment target"
     | Statement.FunctionDef funcdef =>
-        translate_function funcdef
+        some (translate_function funcdef)
     | Statement.Global _ =>
         -- Global statements are handled at module level, skip in function body
-        "  // global declaration"
+        some "  // global declaration"
     | Statement.Return ret =>
         match ret.value with
-        | some expr => s!"  ret := {translate_expression expr};"
-        | none => "  return;"
-    | Statement.While while_stmt =>
-        let test := translate_expression while_stmt.test
-        let body_stmts := while_stmt.body.map translate_statement
-        let body := "\n".intercalate body_stmts.toList
-        s!"  while ({test}) " ++ "{\n" ++ body ++ "\n  }"
+        | some expr => some s!"  ret := {translate_expression expr};"
+        | none => some "  return;"
+    | Statement.While _ =>
+        -- While loops are unsupported - return none
+        none
 
   -- Translate function definition
   partial def translate_function (funcdef: FunctionDef) : String :=
     let name := funcdef.name
     let args := translate_args funcdef.args
     
-    -- Collect local variables from assignments in function body
-    let local_vars := collect_local_vars funcdef.body
-    let var_decls := if local_vars.isEmpty then "" else
-      "  " ++ "\n  ".intercalate (local_vars.map (fun v => s!"var {v}: int;")) ++ "\n"
+    -- Try to translate all statements
+    let stmt_results := funcdef.body.map translate_statement
     
-    let body := "\n".intercalate (funcdef.body.map translate_statement).toList
+    -- Check if any statement is unsupported (returns none)
+    let has_unsupported := stmt_results.any (· == none)
     
-    -- Generate function signature
-    let signature := if args.isEmpty then
-      s!"procedure {name}() returns (ret : int)"
+    if has_unsupported then
+      -- Generate comment block for unsupported function
+      -- Note: We don't have line number info in the AST, so using placeholder
+      s!"// Function with unsupported feature: `{name}:line_num`"
     else
-      s!"procedure {name}({args}) returns (ret : int)"
-    
-    -- Generate spec (empty for now)
-    let spec := "spec " ++ "{\n}"
-    
-    -- Combine everything
-    signature ++ "\n" ++ spec ++ "\n{\n" ++ var_decls ++ body ++ "\n};"
+      -- All statements are supported, generate normal function
+      let body_stmts := stmt_results.filterMap id
+      let body := "\n".intercalate body_stmts.toList
+      
+      -- Collect local variables from assignments in function body
+      let local_vars := collect_local_vars funcdef.body
+      let var_decls := if local_vars.isEmpty then "" else
+        "  " ++ "\n  ".intercalate (local_vars.map (fun v => s!"var {v}: int;")) ++ "\n"
+      
+      -- Generate function signature
+      let signature := if args.isEmpty then
+        s!"procedure {name}() returns (ret : int)"
+      else
+        s!"procedure {name}({args}) returns (ret : int)"
+      
+      -- Generate spec (empty for now)
+      let spec := "spec " ++ "{\n}"
+      
+      -- Combine everything
+      signature ++ "\n" ++ spec ++ "\n{\n" ++ var_decls ++ body ++ "\n};"
 end
 
 -- Translate global variable declarations
