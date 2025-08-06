@@ -14,6 +14,9 @@ def translate_operator (op: Operator) : String :=
   | Operator.Add _ => "+"
   | Operator.Mult _ => "*"
   | Operator.Lt _ => "<"
+  | Operator.Eq _ => "=="
+  | Operator.Sub _ => "-"
+  | Operator.Div _ => "/"
 
 -- Helper function to translate variable names
 def translate_name (name: Name) : String :=
@@ -95,7 +98,11 @@ mutual
         | none => some "  return;"
     | Statement.While _ =>
         -- While loops are unsupported - return none
+        -- This is intended behavior for now while we don't know what invariant to use
         none
+    | Statement.Assert assert =>
+        let test := translate_expression assert.test
+        some s!"  assert {test};"
 
   -- Translate function definition
   partial def translate_function (funcdef: FunctionDef) : String :=

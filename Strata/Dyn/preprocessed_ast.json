@@ -325,93 +325,101 @@
             }
           },
           {
-            "_type": "Assert",
-            "test": {
-              "Compare": {
-                "_type": "Compare",
-                "left": {
-                  "Name": {
-                    "_type": "Name",
-                    "id": "s",
-                    "ctx": {
-                      "Load": {
-                        "_type": "Load"
+            "Assert": {
+              "_type": "Assert",
+              "test": {
+                "Compare": {
+                  "_type": "Compare",
+                  "left": {
+                    "Name": {
+                      "_type": "Name",
+                      "id": "s",
+                      "ctx": {
+                        "Load": {
+                          "_type": "Load"
+                        }
                       }
                     }
-                  }
-                },
-                "ops": [
-                  {
-                    "_type": "Eq"
-                  }
-                ],
-                "comparators": [
-                  {
-                    "BinOp": {
-                      "_type": "BinOp",
-                      "left": {
-                        "BinOp": {
-                          "_type": "BinOp",
-                          "left": {
-                            "Name": {
-                              "_type": "Name",
-                              "id": "n",
-                              "ctx": {
-                                "Load": {
-                                  "_type": "Load"
-                                }
-                              }
-                            }
-                          },
-                          "op": {
-                            "Mult": {
-                              "_type": "Mult"
-                            }
-                          },
-                          "right": {
-                            "BinOp": {
-                              "_type": "BinOp",
-                              "left": {
-                                "Name": {
-                                  "_type": "Name",
-                                  "id": "n",
-                                  "ctx": {
-                                    "Load": {
-                                      "_type": "Load"
-                                    }
+                  },
+                  "ops": [
+                    {
+                      "Eq": {
+                        "_type": "Eq"
+                      }
+                    }
+                  ],
+                  "comparators": [
+                    {
+                      "BinOp": {
+                        "_type": "BinOp",
+                        "left": {
+                          "BinOp": {
+                            "_type": "BinOp",
+                            "left": {
+                              "Name": {
+                                "_type": "Name",
+                                "id": "n",
+                                "ctx": {
+                                  "Load": {
+                                    "_type": "Load"
                                   }
                                 }
-                              },
-                              "op": {
-                                "_type": "Sub"
-                              },
-                              "right": {
-                                "Constant": {
-                                  "_type": "Constant",
-                                  "value": 1,
-                                  "kind": null
+                              }
+                            },
+                            "op": {
+                              "Mult": {
+                                "_type": "Mult"
+                              }
+                            },
+                            "right": {
+                              "BinOp": {
+                                "_type": "BinOp",
+                                "left": {
+                                  "Name": {
+                                    "_type": "Name",
+                                    "id": "n",
+                                    "ctx": {
+                                      "Load": {
+                                        "_type": "Load"
+                                      }
+                                    }
+                                  }
+                                },
+                                "op": {
+                                  "Sub": {
+                                    "_type": "Sub"
+                                  }
+                                },
+                                "right": {
+                                  "Constant": {
+                                    "_type": "Constant",
+                                    "value": 1,
+                                    "kind": null
+                                  }
                                 }
                               }
                             }
                           }
-                        }
-                      },
-                      "op": {
-                        "_type": "Div"
-                      },
-                      "right": {
-                        "Constant": {
-                          "_type": "Constant",
-                          "value": 2,
-                          "kind": null
+                        },
+                        "op": {
+                          "Div": {
+                            "_type": "Div"
+                          }
+                        },
+                        "right": {
+                          "Constant": {
+                            "_type": "Constant",
+                            "value": 2,
+                            "kind": null
+                          }
                         }
                       }
                     }
-                  }
-                ]
-              }
-            },
-            "msg": null
+                  ]
+                }
+              },
+              "msg": null
+            }
           },
           {
             "Return": {

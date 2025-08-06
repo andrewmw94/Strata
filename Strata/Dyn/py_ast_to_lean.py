@@ -15,6 +15,7 @@ def tag_statement_enums(j):
     - Global
     - Return
     - While
+    - Assert
     """
     def tag_statement_enums_on_children(n):
         res = {}
@@ -34,6 +35,8 @@ def tag_statement_enums(j):
             return {"Return": tag_statement_enums_on_children(j)}
         elif "_type" in j and j["_type"] == "While":
             return {"While": tag_statement_enums_on_children(j)}
+        elif "_type" in j and j["_type"] == "Assert":
+            return {"Assert": tag_statement_enums_on_children(j)}
         return tag_statement_enums_on_children(j)
     if isinstance(j, list):
         return [tag_statement_enums(n) for n in j]
@@ -97,6 +100,9 @@ def tag_operator_enums(j):
     - Add
     - Mult
     - Lt
+    - Eq
+    - Sub
+    - Div
     """
     def tag_operator_enums_on_children(n):
         res = {}
@@ -110,6 +116,12 @@ def tag_operator_enums(j):
             return {"Mult": tag_operator_enums_on_children(j)}
         elif "_type" in j and j["_type"] == "Lt":
             return {"Lt": tag_operator_enums_on_children(j)}
+        elif "_type" in j and j["_type"] == "Eq":
+            return {"Eq": tag_operator_enums_on_children(j)}
+        elif "_type" in j and j["_type"] == "Sub":
+            return {"Sub": tag_operator_enums_on_children(j)}
+        elif "_type" in j and j["_type"] == "Div":
+            return {"Div": tag_operator_enums_on_children(j)}
         return tag_operator_enums_on_children(j)
     if isinstance(j, list):
         return [tag_operator_enums(n) for n in j]

@@ -50,6 +50,15 @@ deriving Repr, Lean.FromJson, Lean.ToJson
 structure LtOp extends BaseNode where
 deriving Repr, Lean.FromJson, Lean.ToJson
 
+structure EqOp extends BaseNode where
+deriving Repr, Lean.FromJson, Lean.ToJson
+
+structure SubOp extends BaseNode where
+deriving Repr, Lean.FromJson, Lean.ToJson
+
+structure DivOp extends BaseNode where
+deriving Repr, Lean.FromJson, Lean.ToJson
+
 -- Individual function argument
 structure Arg extends BaseNode where
   arg : String
@@ -81,6 +90,9 @@ mutual
     | Add : AddOp → Operator
     | Mult : MultOp → Operator
     | Lt : LtOp → Operator
+    | Eq : EqOp → Operator
+    | Sub : SubOp → Operator
+    | Div : DivOp → Operator
   deriving Repr, Lean.FromJson, Lean.ToJson
 
   -- Expressions
@@ -151,6 +163,11 @@ mutual
     orelse : Array Statement := #[]
   deriving Repr, Lean.FromJson, Lean.ToJson
 
+  structure Assert extends BaseNode where
+    test : Expression
+    msg : Option Expression := none
+  deriving Repr, Lean.FromJson, Lean.ToJson
+
   -- Statement union type
   inductive Statement where
     | Assign : Assign → Statement
@@ -159,6 +176,7 @@ mutual
     | Global : Global → Statement
     | Return : Return → Statement
     | While : While → Statement
+    | Assert : Assert → Statement
   deriving Repr, Lean.FromJson, Lean.ToJson
 end
 
