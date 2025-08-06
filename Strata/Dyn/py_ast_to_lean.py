@@ -124,18 +124,20 @@ def modify(j):
     return tag_statement_enums(tag_expression_enums(tag_context_enums(tag_operator_enums(j))))
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python py_ast_to_lean.py <filename>")
+    if len(sys.argv) != 3:
+        print("Usage: python py_ast_to_lean.py input_file output_file")
         sys.exit(1)
 
     filename = sys.argv[1]
+    output = sys.argv[2]
     try:
         # Read the file
         with open(filename, 'r') as file:
             s = file.read()
             j = json.loads(s)
             modified_j = modify(j)
-            print(json.dumps(modified_j, indent=2))
+            with open(output, 'w') as out:
+                out.write(json.dumps(modified_j, indent=2))
             
     except FileNotFoundError:
         print(f"Error: File '{filename}' not found.")

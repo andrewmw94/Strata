@@ -39,7 +39,7 @@ def collect_local_vars (stmts: Array Statement) : List String :=
         | Expression.Name name => [name.id]
         | _ => []
     | _ => []
-  
+
   -- Simple approach: just collect from top-level statements
   let all_vars := stmts.toList.foldl (fun acc stmt => acc ++ collect_from_stmt stmt) []
   -- Filter out function parameters and return variable
@@ -51,7 +51,7 @@ mutual
     match expr with
     | Expression.Name name => translate_name name
     | Expression.Constant const => translate_constant_value const.value
-    | Expression.BinOp binop => 
+    | Expression.BinOp binop =>
         let left := translate_expression binop.left
         let right := translate_expression binop.right
         let op := translate_operator binop.op
@@ -101,36 +101,35 @@ mutual
   partial def translate_function (funcdef: FunctionDef) : String :=
     let name := funcdef.name
     let args := translate_args funcdef.args
-    
+
     -- Try to translate all statements
     let stmt_results := funcdef.body.map translate_statement
-    
+
     -- Check if any statement is unsupported (returns none)
     let has_unsupported := stmt_results.any (· == none)
-    
+
     if has_unsupported then
       -- Generate comment block for unsupported function
-      -- Note: We don't have line number info in the AST, so using placeholder
-      s!"// Function with unsupported feature: `{name}:line_num`"
+      s!"// Function with unsupported feature: `{name}`"
     else
       -- All statements are supported, generate normal function
       let body_stmts := stmt_results.filterMap id
       let body := "\n".intercalate body_stmts.toList
-      
+
       -- Collect local variables from assignments in function body
       let local_vars := collect_local_vars funcdef.body
       let var_decls := if local_vars.isEmpty then "" else
         "  " ++ "\n  ".intercalate (local_vars.map (fun v => s!"var {v}: int;")) ++ "\n"
-      
+
       -- Generate function signature
       let signature := if args.isEmpty then
         s!"procedure {name}() returns (ret : int)"
       else
         s!"procedure {name}({args}) returns (ret : int)"
-      
+
       -- Generate spec (empty for now)
       let spec := "spec " ++ "{\n}"
-      
+
       -- Combine everything
       signature ++ "\n" ++ spec ++ "\n{\n" ++ var_decls ++ body ++ "\n};"
 end
@@ -155,6 +154,6 @@ def translate_py_to_boogie (m: Module) : String :=
     | Statement.FunctionDef funcdef => some (translate_function funcdef)
     | _ => none
   let functions_str := "\n\n".intercalate functions.toList
-  
+
   let parts := [header, global_vars, functions_str].filter (· ≠ "")
   "\n\n".intercalate parts

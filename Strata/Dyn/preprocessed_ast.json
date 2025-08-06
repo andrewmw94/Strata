@@ -1,0 +1,441 @@
+{
+  "_type": "Module",
+  "body": [
+    {
+      "Assign": {
+        "_type": "Assign",
+        "targets": [
+          {
+            "Name": {
+              "_type": "Name",
+              "id": "count",
+              "ctx": {
+                "Store": {
+                  "_type": "Store"
+                }
+              }
+            }
+          }
+        ],
+        "value": {
+          "Constant": {
+            "_type": "Constant",
+            "value": 0,
+            "kind": null
+          }
+        },
+        "type_comment": null
+      }
+    },
+    {
+      "FunctionDef": {
+        "_type": "FunctionDef",
+        "name": "square",
+        "args": {
+          "_type": "arguments",
+          "posonlyargs": [],
+          "args": [
+            {
+              "_type": "arg",
+              "arg": "x",
+              "annotation": null,
+              "type_comment": null
+            }
+          ],
+          "vararg": null,
+          "kwonlyargs": [],
+          "kw_defaults": [],
+          "kwarg": null,
+          "defaults": []
+        },
+        "body": [
+          {
+            "Global": {
+              "_type": "Global",
+              "names": [
+                "count"
+              ]
+            }
+          },
+          {
+            "AugAssign": {
+              "_type": "AugAssign",
+              "target": {
+                "Name": {
+                  "_type": "Name",
+                  "id": "count",
+                  "ctx": {
+                    "Store": {
+                      "_type": "Store"
+                    }
+                  }
+                }
+              },
+              "op": {
+                "Add": {
+                  "_type": "Add"
+                }
+              },
+              "value": {
+                "Constant": {
+                  "_type": "Constant",
+                  "value": 1,
+                  "kind": null
+                }
+              }
+            }
+          },
+          {
+            "Return": {
+              "_type": "Return",
+              "value": {
+                "BinOp": {
+                  "_type": "BinOp",
+                  "left": {
+                    "Name": {
+                      "_type": "Name",
+                      "id": "x",
+                      "ctx": {
+                        "Load": {
+                          "_type": "Load"
+                        }
+                      }
+                    }
+                  },
+                  "op": {
+                    "Mult": {
+                      "_type": "Mult"
+                    }
+                  },
+                  "right": {
+                    "Name": {
+                      "_type": "Name",
+                      "id": "x",
+                      "ctx": {
+                        "Load": {
+                          "_type": "Load"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "decorator_list": [],
+        "returns": null,
+        "type_comment": null,
+        "type_params": []
+      }
+    },
+    {
+      "FunctionDef": {
+        "_type": "FunctionDef",
+        "name": "sum_1_to_n",
+        "args": {
+          "_type": "arguments",
+          "posonlyargs": [],
+          "args": [
+            {
+              "_type": "arg",
+              "arg": "n",
+              "annotation": null,
+              "type_comment": null
+            }
+          ],
+          "vararg": null,
+          "kwonlyargs": [],
+          "kw_defaults": [],
+          "kwarg": null,
+          "defaults": []
+        },
+        "body": [
+          {
+            "Assign": {
+              "_type": "Assign",
+              "targets": [
+                {
+                  "Name": {
+                    "_type": "Name",
+                    "id": "i",
+                    "ctx": {
+                      "Store": {
+                        "_type": "Store"
+                      }
+                    }
+                  }
+                }
+              ],
+              "value": {
+                "Constant": {
+                  "_type": "Constant",
+                  "value": 0,
+                  "kind": null
+                }
+              },
+              "type_comment": null
+            }
+          },
+          {
+            "Assign": {
+              "_type": "Assign",
+              "targets": [
+                {
+                  "Name": {
+                    "_type": "Name",
+                    "id": "s",
+                    "ctx": {
+                      "Store": {
+                        "_type": "Store"
+                      }
+                    }
+                  }
+                }
+              ],
+              "value": {
+                "Constant": {
+                  "_type": "Constant",
+                  "value": 0,
+                  "kind": null
+                }
+              },
+              "type_comment": null
+            }
+          },
+          {
+            "While": {
+              "_type": "While",
+              "test": {
+                "Compare": {
+                  "_type": "Compare",
+                  "left": {
+                    "Name": {
+                      "_type": "Name",
+                      "id": "i",
+                      "ctx": {
+                        "Load": {
+                          "_type": "Load"
+                        }
+                      }
+                    }
+                  },
+                  "ops": [
+                    {
+                      "Lt": {
+                        "_type": "Lt"
+                      }
+                    }
+                  ],
+                  "comparators": [
+                    {
+                      "BinOp": {
+                        "_type": "BinOp",
+                        "left": {
+                          "Name": {
+                            "_type": "Name",
+                            "id": "n",
+                            "ctx": {
+                              "Load": {
+                                "_type": "Load"
+                              }
+                            }
+                          }
+                        },
+                        "op": {
+                          "Add": {
+                            "_type": "Add"
+                          }
+                        },
+                        "right": {
+                          "Constant": {
+                            "_type": "Constant",
+                            "value": 1,
+                            "kind": null
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": [
+                {
+                  "AugAssign": {
+                    "_type": "AugAssign",
+                    "target": {
+                      "Name": {
+                        "_type": "Name",
+                        "id": "s",
+                        "ctx": {
+                          "Store": {
+                            "_type": "Store"
+                          }
+                        }
+                      }
+                    },
+                    "op": {
+                      "Add": {
+                        "_type": "Add"
+                      }
+                    },
+                    "value": {
+                      "Name": {
+                        "_type": "Name",
+                        "id": "i",
+                        "ctx": {
+                          "Load": {
+                            "_type": "Load"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "AugAssign": {
+                    "_type": "AugAssign",
+                    "target": {
+                      "Name": {
+                        "_type": "Name",
+                        "id": "i",
+                        "ctx": {
+                          "Store": {
+                            "_type": "Store"
+                          }
+                        }
+                      }
+                    },
+                    "op": {
+                      "Add": {
+                        "_type": "Add"
+                      }
+                    },
+                    "value": {
+                      "Constant": {
+                        "_type": "Constant",
+                        "value": 1,
+                        "kind": null
+                      }
+                    }
+                  }
+                }
+              ],
+              "orelse": []
+            }
+          },
+          {
+            "_type": "Assert",
+            "test": {
+              "Compare": {
+                "_type": "Compare",
+                "left": {
+                  "Name": {
+                    "_type": "Name",
+                    "id": "s",
+                    "ctx": {
+                      "Load": {
+                        "_type": "Load"
+                      }
+                    }
+                  }
+                },
+                "ops": [
+                  {
+                    "_type": "Eq"
+                  }
+                ],
+                "comparators": [
+                  {
+                    "BinOp": {
+                      "_type": "BinOp",
+                      "left": {
+                        "BinOp": {
+                          "_type": "BinOp",
+                          "left": {
+                            "Name": {
+                              "_type": "Name",
+                              "id": "n",
+                              "ctx": {
+                                "Load": {
+                                  "_type": "Load"
+                                }
+                              }
+                            }
+                          },
+                          "op": {
+                            "Mult": {
+                              "_type": "Mult"
+                            }
+                          },
+                          "right": {
+                            "BinOp": {
+                              "_type": "BinOp",
+                              "left": {
+                                "Name": {
+                                  "_type": "Name",
+                                  "id": "n",
+                                  "ctx": {
+                                    "Load": {
+                                      "_type": "Load"
+                                    }
+                                  }
+                                }
+                              },
+                              "op": {
+                                "_type": "Sub"
+                              },
+                              "right": {
+                                "Constant": {
+                                  "_type": "Constant",
+                                  "value": 1,
+                                  "kind": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "op": {
+                        "_type": "Div"
+                      },
+                      "right": {
+                        "Constant": {
+                          "_type": "Constant",
+                          "value": 2,
+                          "kind": null
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "msg": null
+          },
+          {
+            "Return": {
+              "_type": "Return",
+              "value": {
+                "Name": {
+                  "_type": "Name",
+                  "id": "s",
+                  "ctx": {
+                    "Load": {
+                      "_type": "Load"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "decorator_list": [],
+        "returns": null,
+        "type_comment": null,
+        "type_params": []
+      }
+    }
+  ],
+  "type_ignores": []
+}
