@@ -48,6 +48,19 @@ def collect_local_vars (stmts: Array Statement) : List String :=
   -- Filter out function parameters and return variable
   all_vars.filter (fun v => v ≠ "ret")
 
+-- Helper function to collect global vars in scope w/i function body
+def collect_global_vars (stmts: Array Statement) : List String :=
+  let rec collect_from_stmt (stmt: Statement) : List String :=
+    match stmt with
+    | Statement.Global g =>
+      g.names.toList
+    | _ => []
+
+  -- Simple approach: just collect from top-level statements
+  let all_vars := stmts.toList.foldl (fun acc stmt => acc ++ collect_from_stmt stmt) []
+  -- Filter out function parameters and return variable
+  all_vars.filter (fun v => v ≠ "ret")
+
 mutual
   -- Translate expressions
   partial def translate_expression (expr: Expression) : String :=
@@ -123,8 +136,10 @@ mutual
       let body_stmts := stmt_results.filterMap id
       let body := "\n".intercalate body_stmts.toList
 
+      let global_vars_in_scope := collect_global_vars funcdef.body
+
       -- Collect local variables from assignments in function body
-      let local_vars := collect_local_vars funcdef.body
+      let local_vars := (collect_local_vars funcdef.body).removeAll global_vars_in_scope
       let var_decls := if local_vars.isEmpty then "" else
         "  " ++ "\n  ".intercalate (local_vars.map (fun v => s!"var {v}: int;")) ++ "\n"
 
@@ -135,7 +150,8 @@ mutual
         s!"procedure {name}({args}) returns (ret : int)"
 
       -- Generate spec (empty for now)
-      let spec := "spec " ++ "{\n}"
+      let spec := if global_vars_in_scope.isEmpty then "spec {\n}" else
+         "spec " ++ "{\n" ++ "\n".intercalate (global_vars_in_scope.map (λ n => s!"  modifies {n};"))++ "\n}"
 
       -- Combine everything
       signature ++ "\n" ++ spec ++ "\n{\n" ++ var_decls ++ body ++ "\n};"
