@@ -1,6 +1,6 @@
 name = "Strata"
 version = "0.1.0"
-defaultTargets = ["Strata", "StrataVerify", "StrataTranslate"]
+defaultTargets = ["Strata", "StrataVerify", "StrataTranslate", "StrataToCBMC"]
 testDriver = "StrataTest"
 
 [[lean_lib]]
@@ -15,3 +15,6 @@ name = "StrataVerify"
 
 [[lean_exe]]
 name = "StrataTranslate"
+
+[[lean_exe]]
+name = "StrataToCBMC"
