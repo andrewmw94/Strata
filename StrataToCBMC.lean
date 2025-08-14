@@ -122,9 +122,9 @@ def testSymbols : IO Unit := do
   let ySymbol := createParameterSymbol "y"
   let zSymbol := createLocalSymbol "z"
 
-  let m : Map String CBMCSymbol := [("\"simpleTest::x\"", xSymbol),
-                                    ("\"simpleTest::y\"", ySymbol),
-                                    ("\"simpleTest::z\"", zSymbol)]
+  let m : Map String CBMCSymbol := [("simpleTest::x", xSymbol),
+                                    ("simpleTest::y", ySymbol),
+                                    ("simpleTest::1::z", zSymbol)]
 
   IO.println (toString (toJson m))
 
