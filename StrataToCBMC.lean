@@ -899,17 +899,17 @@ instance : ToJson (Map String CBMCSymbol) where
   toJson m := Json.mkObj (m.map fun (k, v) => (k, toJson v))
 
 def testSymbols : IO Unit := do
-  -- let contractSymbol := createContractSymbol "simpleTest"
+  let contractSymbol := createContractSymbol "simpleTest"
   let implSymbol := createImplementationSymbol "simpleTest"
-  -- let xSymbol := createParameterSymbol "x"
-  -- let ySymbol := createParameterSymbol "y"
-  -- let zSymbol := createLocalSymbol "z"
+  let xSymbol := createParameterSymbol "x"
+  let ySymbol := createParameterSymbol "y"
+  let zSymbol := createLocalSymbol "z"
 
-  let m : Map String CBMCSymbol := [-- ("contract::simpleTest", contractSymbol),
-                                    ("simpleTest", implSymbol)]
-                                    -- ("simpleTest::x", xSymbol),
-                                    -- ("simpleTest::y", ySymbol),
-                                    -- ("simpleTest::1::z", zSymbol)]
+  let m : Map String CBMCSymbol := [("contract::simpleTest", contractSymbol),
+                                    ("simpleTest", implSymbol),
+                                    ("simpleTest::x", xSymbol),
+                                    ("simpleTest::y", ySymbol),
+                                    ("simpleTest::1::z", zSymbol)]
 
   IO.println (toString (toJson m))
 
