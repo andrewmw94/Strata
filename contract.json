@@ -1,0 +1,647 @@
+{
+    "baseName": "simpleTest",
+    "isAuxiliary": false,
+    "isExported": false,
+    "isExtern": false,
+    "isFileLocal": false,
+    "isInput": false,
+    "isLvalue": false,
+    "isMacro": false,
+    "isOutput": false,
+    "isParameter": false,
+    "isProperty": true,
+    "isStateVar": false,
+    "isStaticLifetime": false,
+    "isThreadLocal": false,
+    "isType": false,
+    "isVolatile": false,
+    "isWeak": false,
+    "location": {
+        "id": "",
+        "namedSub": {
+            "file": {
+                "id": "from_andrew.c"
+            },
+            "function": {
+                "id": ""
+            },
+            "line": {
+                "id": "1"
+            },
+            "working_directory": {
+                "id": "/home/ub-backup/tautschn/cbmc-github.git"
+            }
+        }
+    },
+    "mode": "C",
+    "module": "from_andrew",
+    "name": "contract::simpleTest",
+    "prettyName": "simpleTest",
+    "prettyType": "signed int (signed int x, signed int y)",
+    "prettyValue": "",
+    "type": {
+        "id": "code",
+        "namedSub": {
+            "#source_location": {
+                "id": "",
+                "namedSub": {
+                    "file": {
+                        "id": "from_andrew.c"
+                    },
+                    "function": {
+                        "id": ""
+                    },
+                    "line": {
+                        "id": "1"
+                    },
+                    "working_directory": {
+                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                    }
+                }
+            },
+            "#spec_assigns": {
+                "id": ""
+            },
+            "#spec_ensures": {
+                "id": "",
+                "sub": [
+                    {
+                        "id": "lambda",
+                        "namedSub": {
+                            "#source_location": {
+                                "id": "",
+                                "namedSub": {
+                                    "file": {
+                                        "id": "from_andrew.c"
+                                    },
+                                    "function": {
+                                        "id": "simpleTest"
+                                    },
+                                    "line": {
+                                        "id": "3"
+                                    },
+                                    "working_directory": {
+                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                    }
+                                }
+                            },
+                            "type": {
+                                "id": "mathematical_function",
+                                "sub": [
+                                    {
+                                        "id": "",
+                                        "sub": [
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "bool"
+                                    }
+                                ]
+                            }
+                        },
+                        "sub": [
+                            {
+                                "id": "tuple",
+                                "namedSub": {
+                                    "type": {
+                                        "id": "tuple"
+                                    }
+                                },
+                                "sub": [
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "__CPROVER_return_value"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "simpleTest::x"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "simpleTest::y"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "notequal",
+                                "namedSub": {
+                                    "#source_location": {
+                                        "id": "",
+                                        "namedSub": {
+                                            "file": {
+                                                "id": "from_andrew.c"
+                                            },
+                                            "function": {
+                                                "id": "simpleTest"
+                                            },
+                                            "line": {
+                                                "id": "3"
+                                            },
+                                            "working_directory": {
+                                                "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                            }
+                                        }
+                                    },
+                                    "type": {
+                                        "id": "bool"
+                                    }
+                                },
+                                "sub": [
+                                    {
+                                        "id": "constant",
+                                        "namedSub": {
+                                            "#base": {
+                                                "id": "10"
+                                            },
+                                            "#source_location": {
+                                                "id": "",
+                                                "namedSub": {
+                                                    "file": {
+                                                        "id": "from_andrew.c"
+                                                    },
+                                                    "function": {
+                                                        "id": "simpleTest"
+                                                    },
+                                                    "line": {
+                                                        "id": "3"
+                                                    },
+                                                    "working_directory": {
+                                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                                    }
+                                                }
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            "value": {
+                                                "id": "1"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "constant",
+                                        "namedSub": {
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            "value": {
+                                                "id": "0"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "#spec_frees": {
+                "id": ""
+            },
+            "#spec_requires": {
+                "id": "",
+                "sub": [
+                    {
+                        "id": "lambda",
+                        "namedSub": {
+                            "#source_location": {
+                                "id": "",
+                                "namedSub": {
+                                    "file": {
+                                        "id": "from_andrew.c"
+                                    },
+                                    "function": {
+                                        "id": "simpleTest"
+                                    },
+                                    "line": {
+                                        "id": "2"
+                                    },
+                                    "working_directory": {
+                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                    }
+                                }
+                            },
+                            "type": {
+                                "id": "mathematical_function",
+                                "sub": [
+                                    {
+                                        "id": "",
+                                        "sub": [
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "bool"
+                                    }
+                                ]
+                            }
+                        },
+                        "sub": [
+                            {
+                                "id": "tuple",
+                                "namedSub": {
+                                    "type": {
+                                        "id": "tuple"
+                                    }
+                                },
+                                "sub": [
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "__CPROVER_return_value"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "simpleTest::x"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "identifier": {
+                                                "id": "simpleTest::y"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "id": ">",
+                                "namedSub": {
+                                    "#source_location": {
+                                        "id": "",
+                                        "namedSub": {
+                                            "file": {
+                                                "id": "from_andrew.c"
+                                            },
+                                            "function": {
+                                                "id": "simpleTest"
+                                            },
+                                            "line": {
+                                                "id": "2"
+                                            },
+                                            "working_directory": {
+                                                "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                            }
+                                        }
+                                    },
+                                    "type": {
+                                        "id": "bool"
+                                    }
+                                },
+                                "sub": [
+                                    {
+                                        "id": "symbol",
+                                        "namedSub": {
+                                            "#base_name": {
+                                                "id": "y"
+                                            },
+                                            "#id_class": {
+                                                "id": "1"
+                                            },
+                                            "#lvalue": {
+                                                "id": "1"
+                                            },
+                                            "#source_location": {
+                                                "id": "",
+                                                "namedSub": {
+                                                    "file": {
+                                                        "id": "from_andrew.c"
+                                                    },
+                                                    "function": {
+                                                        "id": "simpleTest"
+                                                    },
+                                                    "line": {
+                                                        "id": "2"
+                                                    },
+                                                    "working_directory": {
+                                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                                    }
+                                                }
+                                            },
+                                            "identifier": {
+                                                "id": "simpleTest::y"
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "id": "constant",
+                                        "namedSub": {
+                                            "#base": {
+                                                "id": "10"
+                                            },
+                                            "#source_location": {
+                                                "id": "",
+                                                "namedSub": {
+                                                    "file": {
+                                                        "id": "from_andrew.c"
+                                                    },
+                                                    "function": {
+                                                        "id": "simpleTest"
+                                                    },
+                                                    "line": {
+                                                        "id": "2"
+                                                    },
+                                                    "working_directory": {
+                                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                                    }
+                                                }
+                                            },
+                                            "type": {
+                                                "id": "signedbv",
+                                                "namedSub": {
+                                                    "#c_type": {
+                                                        "id": "signed_int"
+                                                    },
+                                                    "width": {
+                                                        "id": "32"
+                                                    }
+                                                }
+                                            },
+                                            "value": {
+                                                "id": "0"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": {
+                "id": "",
+                "sub": [
+                    {
+                        "id": "parameter",
+                        "namedSub": {
+                            "#base_name": {
+                                "id": "x"
+                            },
+                            "#identifier": {
+                                "id": "simpleTest::x"
+                            },
+                            "#source_location": {
+                                "id": "",
+                                "namedSub": {
+                                    "file": {
+                                        "id": "from_andrew.c"
+                                    },
+                                    "function": {
+                                        "id": "simpleTest"
+                                    },
+                                    "line": {
+                                        "id": "1"
+                                    },
+                                    "working_directory": {
+                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                    }
+                                }
+                            },
+                            "type": {
+                                "id": "signedbv",
+                                "namedSub": {
+                                    "#c_type": {
+                                        "id": "signed_int"
+                                    },
+                                    "width": {
+                                        "id": "32"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "id": "parameter",
+                        "namedSub": {
+                            "#base_name": {
+                                "id": "y"
+                            },
+                            "#identifier": {
+                                "id": "simpleTest::y"
+                            },
+                            "#source_location": {
+                                "id": "",
+                                "namedSub": {
+                                    "file": {
+                                        "id": "from_andrew.c"
+                                    },
+                                    "function": {
+                                        "id": "simpleTest"
+                                    },
+                                    "line": {
+                                        "id": "1"
+                                    },
+                                    "working_directory": {
+                                        "id": "/home/ub-backup/tautschn/cbmc-github.git"
+                                    }
+                                }
+                            },
+                            "type": {
+                                "id": "signedbv",
+                                "namedSub": {
+                                    "#c_type": {
+                                        "id": "signed_int"
+                                    },
+                                    "width": {
+                                        "id": "32"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "return_type": {
+                "id": "signedbv",
+                "namedSub": {
+                    "#c_type": {
+                        "id": "signed_int"
+                    },
+                    "width": {
+                        "id": "32"
+                    }
+                }
+            }
+        }
+    },
+    "value": {
+        "id": "nil"
+    }
+}
