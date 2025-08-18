@@ -1,4 +1,109 @@
-{"simpleTest":
+{"simpleTest::y":
+ {"value": {"id": "nil"},
+  "type":
+  {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+   "id": "signedbv"},
+  "prettyValue": "",
+  "prettyType": "signed int",
+  "prettyName": "",
+  "name": "simpleTest::y",
+  "module": "from_andrew",
+  "mode": "C",
+  "location":
+  {"namedSub":
+   {"working_directory": {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+    "line": {"id": "1"},
+    "function": {"id": "simpleTest"},
+    "file": {"id": "from_andrew.c"}},
+   "id": ""},
+  "isWeak": false,
+  "isVolatile": false,
+  "isType": false,
+  "isThreadLocal": true,
+  "isStaticLifetime": false,
+  "isStateVar": true,
+  "isProperty": false,
+  "isParameter": true,
+  "isOutput": false,
+  "isMacro": false,
+  "isLvalue": true,
+  "isInput": false,
+  "isFileLocal": true,
+  "isExtern": false,
+  "isExported": false,
+  "isAuxiliary": false,
+  "baseName": "y"},
+ "simpleTest::x":
+ {"value": {"id": "nil"},
+  "type":
+  {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+   "id": "signedbv"},
+  "prettyValue": "",
+  "prettyType": "signed int",
+  "prettyName": "",
+  "name": "simpleTest::x",
+  "module": "from_andrew",
+  "mode": "C",
+  "location":
+  {"namedSub":
+   {"working_directory": {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+    "line": {"id": "1"},
+    "function": {"id": "simpleTest"},
+    "file": {"id": "from_andrew.c"}},
+   "id": ""},
+  "isWeak": false,
+  "isVolatile": false,
+  "isType": false,
+  "isThreadLocal": true,
+  "isStaticLifetime": false,
+  "isStateVar": true,
+  "isProperty": false,
+  "isParameter": true,
+  "isOutput": false,
+  "isMacro": false,
+  "isLvalue": true,
+  "isInput": false,
+  "isFileLocal": true,
+  "isExtern": false,
+  "isExported": false,
+  "isAuxiliary": false,
+  "baseName": "x"},
+ "simpleTest::1::z":
+ {"value": {"id": "nil"},
+  "type":
+  {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+   "id": "signedbv"},
+  "prettyValue": "",
+  "prettyType": "signed int",
+  "prettyName": "simpleTest::1::z",
+  "name": "simpleTest::1::z",
+  "module": "from_andrew",
+  "mode": "C",
+  "location":
+  {"namedSub":
+   {"working_directory": {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+    "line": {"id": "5"},
+    "function": {"id": "simpleTest"},
+    "file": {"id": "from_andrew.c"}},
+   "id": ""},
+  "isWeak": false,
+  "isVolatile": false,
+  "isType": false,
+  "isThreadLocal": true,
+  "isStaticLifetime": false,
+  "isStateVar": false,
+  "isProperty": false,
+  "isParameter": false,
+  "isOutput": false,
+  "isMacro": false,
+  "isLvalue": true,
+  "isInput": false,
+  "isFileLocal": true,
+  "isExtern": false,
+  "isExported": false,
+  "isAuxiliary": false,
+  "baseName": "z"},
+ "simpleTest":
  {"value":
   {"sub":
    [{"sub":
@@ -853,6 +958,273 @@
   "isOutput": false,
   "isMacro": false,
   "isLvalue": true,
+  "isInput": false,
+  "isFileLocal": false,
+  "isExtern": false,
+  "isExported": false,
+  "isAuxiliary": false,
+  "baseName": "simpleTest"},
+ "contract::simpleTest":
+ {"value": {"id": "nil"},
+  "type":
+  {"namedSub":
+   {"return_type":
+    {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+     "id": "signedbv"},
+    "parameters":
+    {"sub":
+     [{"namedSub":
+       {"type":
+        {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+         "id": "signedbv"},
+        "#source_location":
+        {"namedSub":
+         {"working_directory":
+          {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+          "line": {"id": "1"},
+          "function": {"id": "simpleTest"},
+          "file": {"id": "from_andrew.c"}},
+         "id": ""},
+        "#identifier": {"id": "simpleTest::x"},
+        "#base_name": {"id": "x"}},
+       "id": "parameter"},
+      {"namedSub":
+       {"type":
+        {"namedSub": {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+         "id": "signedbv"},
+        "#source_location":
+        {"namedSub":
+         {"working_directory":
+          {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+          "line": {"id": "1"},
+          "function": {"id": "simpleTest"},
+          "file": {"id": "from_andrew.c"}},
+         "id": ""},
+        "#identifier": {"id": "simpleTest::y"},
+        "#base_name": {"id": "y"}},
+       "id": "parameter"}],
+     "id": ""},
+    "#spec_requires":
+    {"sub":
+     [{"sub":
+       [{"sub":
+         [{"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "__CPROVER_return_value"}},
+           "id": "symbol"},
+          {"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "simpleTest::x"}},
+           "id": "symbol"},
+          {"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "simpleTest::y"}},
+           "id": "symbol"}],
+         "namedSub": {"type": {"id": "tuple"}},
+         "id": "tuple"},
+        {"sub":
+         [{"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "simpleTest::y"},
+            "#source_location":
+            {"namedSub":
+             {"working_directory":
+              {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+              "line": {"id": "2"},
+              "function": {"id": "simpleTest"},
+              "file": {"id": "from_andrew.c"}},
+             "id": ""},
+            "#lvalue": {"id": "1"},
+            "#id_class": {"id": "1"},
+            "#base_name": {"id": "y"}},
+           "id": "symbol"},
+          {"namedSub":
+           {"value": {"id": "0"},
+            "type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "#source_location":
+            {"namedSub":
+             {"working_directory":
+              {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+              "line": {"id": "2"},
+              "function": {"id": "simpleTest"},
+              "file": {"id": "from_andrew.c"}},
+             "id": ""},
+            "#base": {"id": "10"}},
+           "id": "constant"}],
+         "namedSub":
+         {"type": {"id": "bool"},
+          "#source_location":
+          {"namedSub":
+           {"working_directory":
+            {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+            "line": {"id": "2"},
+            "function": {"id": "simpleTest"},
+            "file": {"id": "from_andrew.c"}},
+           "id": ""}},
+         "id": ">"}],
+       "namedSub":
+       {"type":
+        {"sub":
+         [{"sub":
+           [{"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"}],
+           "id": ""},
+          {"id": "bool"}],
+         "id": "mathematical_function"},
+        "#source_location":
+        {"namedSub":
+         {"working_directory":
+          {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+          "line": {"id": "2"},
+          "function": {"id": "simpleTest"},
+          "file": {"id": "from_andrew.c"}},
+         "id": ""}},
+       "id": "lambda"}],
+     "id": ""},
+    "#spec_frees": {"id": ""},
+    "#spec_ensures":
+    {"sub":
+     [{"sub":
+       [{"sub":
+         [{"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "__CPROVER_return_value"}},
+           "id": "symbol"},
+          {"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "simpleTest::x"}},
+           "id": "symbol"},
+          {"namedSub":
+           {"type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "identifier": {"id": "simpleTest::y"}},
+           "id": "symbol"}],
+         "namedSub": {"type": {"id": "tuple"}},
+         "id": "tuple"},
+        {"sub":
+         [{"namedSub":
+           {"value": {"id": "1"},
+            "type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            "#source_location":
+            {"namedSub":
+             {"working_directory":
+              {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+              "line": {"id": "3"},
+              "function": {"id": "simpleTest"},
+              "file": {"id": "from_andrew.c"}},
+             "id": ""},
+            "#base": {"id": "10"}},
+           "id": "constant"},
+          {"namedSub":
+           {"value": {"id": "0"},
+            "type":
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"}},
+           "id": "constant"}],
+         "namedSub":
+         {"type": {"id": "bool"},
+          "#source_location":
+          {"namedSub":
+           {"working_directory":
+            {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+            "line": {"id": "3"},
+            "function": {"id": "simpleTest"},
+            "file": {"id": "from_andrew.c"}},
+           "id": ""}},
+         "id": "notequal"}],
+       "namedSub":
+       {"type":
+        {"sub":
+         [{"sub":
+           [{"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"},
+            {"namedSub":
+             {"width": {"id": "32"}, "#c_type": {"id": "signed_int"}},
+             "id": "signedbv"}],
+           "id": ""},
+          {"id": "bool"}],
+         "id": "mathematical_function"},
+        "#source_location":
+        {"namedSub":
+         {"working_directory":
+          {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+          "line": {"id": "3"},
+          "function": {"id": "simpleTest"},
+          "file": {"id": "from_andrew.c"}},
+         "id": ""}},
+       "id": "lambda"}],
+     "id": ""},
+    "#spec_assigns": {"id": ""},
+    "#source_location":
+    {"namedSub":
+     {"working_directory": {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+      "line": {"id": "1"},
+      "function": {"id": ""},
+      "file": {"id": "from_andrew.c"}},
+     "id": ""}},
+   "id": "code"},
+  "prettyValue": "",
+  "prettyType": "signed int (signed int x, signed int y)",
+  "prettyName": "simpleTest",
+  "name": "contract::simpleTest",
+  "module": "from_andrew",
+  "mode": "C",
+  "location":
+  {"namedSub":
+   {"working_directory": {"id": "/home/ub-backup/tautschn/cbmc-github.git"},
+    "line": {"id": "1"},
+    "function": {"id": ""},
+    "file": {"id": "from_andrew.c"}},
+   "id": ""},
+  "isWeak": false,
+  "isVolatile": false,
+  "isType": false,
+  "isThreadLocal": false,
+  "isStaticLifetime": false,
+  "isStateVar": false,
+  "isProperty": true,
+  "isParameter": false,
+  "isOutput": false,
+  "isMacro": false,
+  "isLvalue": false,
   "isInput": false,
   "isFileLocal": false,
   "isExtern": false,

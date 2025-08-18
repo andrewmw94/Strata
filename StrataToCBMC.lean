@@ -208,140 +208,7 @@ def mkConstant (value : String) (base : String) (sourceLocation : Json) : Json :
     ])
   ]
 
-def createContractSymbol (functionName : String) : CBMCSymbol :=
-  let location : Location := {
-    id := "",
-    namedSub := some (Json.mkObj [
-      ("file", Json.mkObj [("id", "from_andrew.c")]),
-      ("function", Json.mkObj [("id", "")]),
-      ("line", Json.mkObj [("id", "1")]),
-      ("working_directory", Json.mkObj [("id", "/home/ub-backup/tautschn/cbmc-github.git")])
-    ])
-  }
 
-  let sourceLocation := mkSourceLocation "from_andrew.c" functionName "2"
-
-  let mathFunctionType := Json.mkObj [
-    ("id", "mathematical_function"),
-    ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", ""),
-        ("sub", Json.arr #[mkIntType, mkIntType, mkIntType])
-      ],
-      Json.mkObj [("id", "bool")]
-    ])
-  ]
-
-  let parameterTuple := Json.mkObj [
-    ("id", "tuple"),
-    ("namedSub", Json.mkObj [("type", Json.mkObj [("id", "tuple")])]),
-    ("sub", Json.arr #[
-      mkSymbol "__CPROVER_return_value" mkIntType,
-      mkSymbol s!"{functionName}::x" mkIntType,
-      mkSymbol s!"{functionName}::y" mkIntType
-    ])
-  ]
-
-  let requiresLambda := Json.mkObj [
-    ("id", "lambda"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", sourceLocation),
-      ("type", mathFunctionType)
-    ]),
-    ("sub", Json.arr #[
-      parameterTuple,
-      Json.mkObj [
-        ("id", ">"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", sourceLocation),
-          ("type", Json.mkObj [("id", "bool")])
-        ]),
-        ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "symbol"),
-            ("namedSub", Json.mkObj [
-              ("#base_name", Json.mkObj [("id", "y")]),
-              ("#id_class", Json.mkObj [("id", "1")]),
-              ("#lvalue", Json.mkObj [("id", "1")]),
-              ("#source_location", sourceLocation),
-              ("identifier", Json.mkObj [("id", s!"{functionName}::y")]),
-              ("type", mkIntType)
-            ])
-          ],
-          mkConstant "0" "10" sourceLocation
-        ])
-      ]
-    ])
-  ]
-
-  let ensuresSourceLocation := mkSourceLocation "from_andrew.c" functionName "3"
-  let ensuresLambda := Json.mkObj [
-    ("id", "lambda"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", ensuresSourceLocation),
-      ("type", mathFunctionType)
-    ]),
-    ("sub", Json.arr #[
-      parameterTuple,
-      Json.mkObj [
-        ("id", "notequal"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", ensuresSourceLocation),
-          ("type", Json.mkObj [("id", "bool")])
-        ]),
-        ("sub", Json.arr #[
-          mkConstant "1" "10" ensuresSourceLocation,
-          Json.mkObj [
-            ("id", "constant"),
-            ("namedSub", Json.mkObj [
-              ("type", mkIntType),
-              ("value", Json.mkObj [("id", "0")])
-            ])
-          ]
-        ])
-      ]
-    ])
-  ]
-
-  let parameters := Json.mkObj [
-    ("id", ""),
-    ("sub", Json.arr #[
-      mkParameter "x" functionName "1",
-      mkParameter "y" functionName "1"
-    ])
-  ]
-
-  let contractType := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" "" "1"),
-      ("#spec_assigns", Json.mkObj [("id", "")]),
-      ("#spec_ensures", Json.mkObj [
-        ("id", ""),
-        ("sub", Json.arr #[ensuresLambda])
-      ]),
-      ("#spec_frees", Json.mkObj [("id", "")]),
-      ("#spec_requires", Json.mkObj [
-        ("id", ""),
-        ("sub", Json.arr #[requiresLambda])
-      ]),
-      ("parameters", parameters),
-      ("return_type", mkIntType)
-    ])
-  ]
-
-  {
-    baseName := functionName,
-    isProperty := true,
-    location := location,
-    mode := "C",
-    module := "from_andrew",
-    name := s!"contract::{functionName}",
-    prettyName := functionName,
-    prettyType := "signed int (signed int x, signed int y)",
-    type := contractType,
-    value := Json.mkObj [("id", "nil")]
-  }
 
 def mkCodeBlock (statement : String) (line : String) (functionName : String) (sub : Array Json) : Json :=
   Json.mkObj [
@@ -747,9 +614,145 @@ def createLocalSymbol (baseName : String) : CBMCSymbol :=
 instance : ToJson (Map String CBMCSymbol) where
   toJson m := Json.mkObj (m.map fun (k, v) => (k, toJson v))
 
+-- Convert LExpr to CBMC JSON format
+def lexprToCBMC (expr : Strata.C_Simp.Expression.Expr) (functionName : String) : Json :=
+  match expr with
+  | .app (.app (.op "Int.Gt" _) (.fvar varName _)) (.const value _) =>
+    mkComparison ">" "2" functionName
+      (Json.mkObj [
+        ("id", "symbol"),
+        ("namedSub", Json.mkObj [
+          ("#base_name", Json.mkObj [("id", varName)]),
+          ("#id_class", Json.mkObj [("id", "1")]),
+          ("#lvalue", Json.mkObj [("id", "1")]),
+          ("#source_location", mkSourceLocation "from_andrew.c" functionName "2"),
+          ("identifier", Json.mkObj [("id", s!"{functionName}::{varName}")]),
+          ("type", mkIntType)
+        ])
+      ])
+      (mkConstant value "10" (mkSourceLocation "from_andrew.c" functionName "2"))
+  | .const "true" _ =>
+    Json.mkObj [
+      ("id", "notequal"),
+      ("namedSub", Json.mkObj [
+        ("#source_location", mkSourceLocation "from_andrew.c" functionName "3"),
+        ("type", Json.mkObj [("id", "bool")])
+      ]),
+      ("sub", Json.arr #[
+        mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "3"),
+        Json.mkObj [
+          ("id", "constant"),
+          ("namedSub", Json.mkObj [
+            ("type", mkIntType),
+            ("value", Json.mkObj [("id", "0")])
+          ])
+        ]
+      ])
+    ]
+  | _ => Json.mkObj [("id", "true")]
+
+def createContractSymbolFromAST (func : Strata.C_Simp.Function) : CBMCSymbol :=
+  let location : Location := {
+    id := "",
+    namedSub := some (Json.mkObj [
+      ("file", Json.mkObj [("id", "from_andrew.c")]),
+      ("function", Json.mkObj [("id", "")]),
+      ("line", Json.mkObj [("id", "1")]),
+      ("working_directory", Json.mkObj [("id", "/home/ub-backup/tautschn/cbmc-github.git")])
+    ])
+  }
+
+  let sourceLocation := mkSourceLocation "from_andrew.c" func.name "2"
+  let ensuresSourceLocation := mkSourceLocation "from_andrew.c" func.name "3"
+
+  let mathFunctionType := Json.mkObj [
+    ("id", "mathematical_function"),
+    ("sub", Json.arr #[
+      Json.mkObj [
+        ("id", ""),
+        ("sub", Json.arr #[mkIntType, mkIntType, mkIntType])
+      ],
+      Json.mkObj [("id", "bool")]
+    ])
+  ]
+
+  let parameterTuple := Json.mkObj [
+    ("id", "tuple"),
+    ("namedSub", Json.mkObj [("type", Json.mkObj [("id", "tuple")])]),
+    ("sub", Json.arr #[
+      mkSymbol "__CPROVER_return_value" mkIntType,
+      mkSymbol s!"{func.name}::x" mkIntType,
+      mkSymbol s!"{func.name}::y" mkIntType
+    ])
+  ]
+
+  let requiresLambda := Json.mkObj [
+    ("id", "lambda"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", sourceLocation),
+      ("type", mathFunctionType)
+    ]),
+    ("sub", Json.arr #[
+      parameterTuple,
+      lexprToCBMC func.pre func.name
+    ])
+  ]
+
+  let ensuresLambda := Json.mkObj [
+    ("id", "lambda"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", ensuresSourceLocation),
+      ("type", mathFunctionType)
+    ]),
+    ("sub", Json.arr #[
+      parameterTuple,
+      lexprToCBMC func.post func.name
+    ])
+  ]
+
+  let parameters := Json.mkObj [
+    ("id", ""),
+    ("sub", Json.arr #[
+      mkParameter "x" func.name "1",
+      mkParameter "y" func.name "1"
+    ])
+  ]
+
+  let contractType := Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" "" "1"),
+      ("#spec_assigns", Json.mkObj [("id", "")]),
+      ("#spec_ensures", Json.mkObj [
+        ("id", ""),
+        ("sub", Json.arr #[ensuresLambda])
+      ]),
+      ("#spec_frees", Json.mkObj [("id", "")]),
+      ("#spec_requires", Json.mkObj [
+        ("id", ""),
+        ("sub", Json.arr #[requiresLambda])
+      ]),
+      ("parameters", parameters),
+      ("return_type", mkIntType)
+    ])
+  ]
+
+  {
+    baseName := func.name,
+    isProperty := true,
+    location := location,
+    mode := "C",
+    module := "from_andrew",
+    name := s!"contract::{func.name}",
+    prettyName := func.name,
+    prettyType := "signed int (signed int x, signed int y)",
+    type := contractType,
+    value := Json.mkObj [("id", "nil")]
+  }
+
 def testSymbols : IO Unit := do
   -- Generate symbols using AST data
-  let contractSymbol := createContractSymbol myFunc.name
+  let contractSymbol := createContractSymbolFromAST myFunc
   let implSymbol := createImplementationSymbol myFunc.name
 
   -- Get parameter names from AST
