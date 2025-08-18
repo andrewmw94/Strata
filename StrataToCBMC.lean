@@ -6,6 +6,39 @@
 
 import Lean.Data.Json
 import Strata.DL.Util.Map
+import Strata.Languages.C_Simp.C_Simp
+import Strata.Languages.C_Simp.Verify
+
+
+-- Our test program
+def SimpleTestEnv :=
+#strata
+program C_Simp;
+
+procedure simpleTest (x: int, y: int) -> int
+  @pre y > #0
+  @post true
+{
+  var z : int;
+  z := x + y;
+  @assert [test_assert] z > x;
+  if (z > #10) then {
+    z := z - #1;
+  } else {
+    z := z + #1;
+  }
+  @assume [test_assume] z > #0;
+  return #0;
+}
+
+#end
+
+open Strata.C_Simp in
+def SimpleTestEnvAST := TransM.run (translateProgram (SimpleTestEnv.commands))
+
+def myFunc : Strata.C_Simp.Function := SimpleTestEnvAST.fst.funcs.head!
+
+#check myFunc
 
 open Lean
 
@@ -312,6 +345,210 @@ def createContractSymbol (functionName : String) : CBMCSymbol :=
     value := Json.mkObj [("id", "nil")]
   }
 
+def mkCodeBlock (statement : String) (line : String) (functionName : String) (sub : Array Json) : Json :=
+  Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+      ("statement", Json.mkObj [("id", statement)]),
+      ("type", Json.mkObj [("id", "empty")])
+    ]),
+    ("sub", Json.arr sub)
+  ]
+
+def mkSideEffect (statement : String) (line : String) (functionName : String) (effectType : Json) (sub : Array Json) : Json :=
+  Json.mkObj [
+    ("id", "side_effect"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+      ("statement", Json.mkObj [("id", statement)]),
+      ("type", effectType)
+    ]),
+    ("sub", Json.arr sub)
+  ]
+
+def mkLvalueSymbol (identifier : String) (line : String) (functionName : String) : Json :=
+  Json.mkObj [
+    ("id", "symbol"),
+    ("namedSub", Json.mkObj [
+      ("#lvalue", Json.mkObj [("id", "1")]),
+      ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+      ("identifier", Json.mkObj [("id", identifier)]),
+      ("type", mkIntType)
+    ])
+  ]
+
+def mkBinaryOp (op : String) (line : String) (functionName : String) (left : Json) (right : Json) : Json :=
+  Json.mkObj [
+    ("id", op),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+      ("type", mkIntType)
+    ]),
+    ("sub", Json.arr #[left, right])
+  ]
+
+def mkComparison (op : String) (line : String) (functionName : String) (left : Json) (right : Json) : Json :=
+  Json.mkObj [
+    ("id", op),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+      ("type", Json.mkObj [("id", "bool")])
+    ]),
+    ("sub", Json.arr #[left, right])
+  ]
+
+def mkBuiltinFunction (_funcName : String) (paramTypes : Array Json) : Json :=
+  Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20"),
+      ("parameters", Json.mkObj [
+        ("id", ""),
+        ("sub", Json.arr paramTypes)
+      ]),
+      ("return_type", Json.mkObj [
+        ("id", "empty"),
+        ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
+        ])
+      ])
+    ])
+  ]
+
+def mkAssertParam : Json :=
+  Json.mkObj [
+    ("id", "parameter"),
+    ("namedSub", Json.mkObj [
+      ("#base_name", Json.mkObj [("id", "assertion")]),
+      ("#identifier", Json.mkObj [("id", "")]),
+      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
+      ("type", Json.mkObj [("id", "bool")])
+    ])
+  ]
+
+def mkStringParam : Json :=
+  Json.mkObj [
+    ("id", "parameter"),
+    ("namedSub", Json.mkObj [
+      ("#base_name", Json.mkObj [("id", "description")]),
+      ("#identifier", Json.mkObj [("id", "")]),
+      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
+      ("type", Json.mkObj [
+        ("id", "pointer"),
+        ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
+          ("width", Json.mkObj [("id", "64")])
+        ]),
+        ("sub", Json.arr #[
+          Json.mkObj [
+            ("id", "signedbv"),
+            ("namedSub", Json.mkObj [
+              ("#c_type", Json.mkObj [("id", "char")]),
+              ("#constant", Json.mkObj [("id", "1")]),
+              ("width", Json.mkObj [("id", "8")])
+            ])
+          ]
+        ])
+      ])
+    ])
+  ]
+
+def mkAssumeParam : Json :=
+  Json.mkObj [
+    ("id", "parameter"),
+    ("namedSub", Json.mkObj [
+      ("#base_name", Json.mkObj [("id", "assumption")]),
+      ("#identifier", Json.mkObj [("id", "")]),
+      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assume" "20"),
+      ("type", Json.mkObj [("id", "bool")])
+    ])
+  ]
+
+def mkStringConstant (value : String) (line : String) (functionName : String) : Json :=
+  Json.mkObj [
+    ("id", "address_of"),
+    ("namedSub", Json.mkObj [
+      ("type", Json.mkObj [
+        ("id", "pointer"),
+        ("namedSub", Json.mkObj [("width", Json.mkObj [("id", "64")])]),
+        ("sub", Json.arr #[
+          Json.mkObj [
+            ("id", "signedbv"),
+            ("namedSub", Json.mkObj [
+              ("#c_type", Json.mkObj [("id", "char")]),
+              ("width", Json.mkObj [("id", "8")])
+            ])
+          ]
+        ])
+      ])
+    ]),
+    ("sub", Json.arr #[
+      Json.mkObj [
+        ("id", "index"),
+        ("namedSub", Json.mkObj [
+          ("type", Json.mkObj [
+            ("id", "signedbv"),
+            ("namedSub", Json.mkObj [
+              ("#c_type", Json.mkObj [("id", "char")]),
+              ("width", Json.mkObj [("id", "8")])
+            ])
+          ])
+        ]),
+        ("sub", Json.arr #[
+          Json.mkObj [
+            ("id", "string_constant"),
+            ("namedSub", Json.mkObj [
+              ("#lvalue", Json.mkObj [("id", "1")]),
+              ("#source_location", mkSourceLocation "from_andrew.c" functionName line),
+              ("type", Json.mkObj [
+                ("id", "array"),
+                ("namedSub", Json.mkObj [
+                  ("size", Json.mkObj [
+                    ("id", "constant"),
+                    ("namedSub", Json.mkObj [
+                      ("type", Json.mkObj [
+                        ("id", "signedbv"),
+                        ("namedSub", Json.mkObj [
+                          ("#c_type", Json.mkObj [("id", "signed_long_int")]),
+                          ("width", Json.mkObj [("id", "64")])
+                        ])
+                      ]),
+                      ("value", Json.mkObj [("id", "C")])
+                    ])
+                  ])
+                ]),
+                ("sub", Json.arr #[
+                  Json.mkObj [
+                    ("id", "signedbv"),
+                    ("namedSub", Json.mkObj [
+                      ("#c_type", Json.mkObj [("id", "char")]),
+                      ("width", Json.mkObj [("id", "8")])
+                    ])
+                  ]
+                ])
+              ]),
+              ("value", Json.mkObj [("id", value)])
+            ])
+          ],
+          Json.mkObj [
+            ("id", "constant"),
+            ("namedSub", Json.mkObj [
+              ("type", Json.mkObj [
+                ("id", "signedbv"),
+                ("namedSub", Json.mkObj [
+                  ("#c_type", Json.mkObj [("id", "signed_long_int")]),
+                  ("width", Json.mkObj [("id", "64")])
+                ])
+              ]),
+              ("value", Json.mkObj [("id", "0")])
+            ])
+          ]
+        ])
+      ]
+    ])
+  ]
+
 def createImplementationSymbol (functionName : String) : CBMCSymbol :=
   let location : Location := {
     id := "",
@@ -339,281 +576,55 @@ def createImplementationSymbol (functionName : String) : CBMCSymbol :=
   ]
 
   -- Variable declaration: signed int z;
-  let declStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "5"),
-      ("statement", Json.mkObj [("id", "decl")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", "symbol"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "5"),
-          ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-          ("type", mkIntType)
-        ])
-      ]
-    ])
+  let declStmt := mkCodeBlock "decl" "5" functionName #[
+    Json.mkObj [
+      ("id", "symbol"),
+      ("namedSub", Json.mkObj [
+        ("#source_location", mkSourceLocation "from_andrew.c" functionName "5"),
+        ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
+        ("type", mkIntType)
+      ])
+    ]
   ]
 
   -- Assignment: z = x + y;
-  let assignStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-      ("statement", Json.mkObj [("id", "expression")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", "side_effect"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-          ("statement", Json.mkObj [("id", "assign")]),
-          ("type", mkIntType)
-        ]),
-        ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "symbol"),
-            ("namedSub", Json.mkObj [
-              ("#lvalue", Json.mkObj [("id", "1")]),
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-              ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-              ("type", mkIntType)
-            ])
-          ],
-          Json.mkObj [
-            ("id", "+"),
-            ("namedSub", Json.mkObj [
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-              ("type", mkIntType)
-            ]),
-            ("sub", Json.arr #[
-              Json.mkObj [
-                ("id", "symbol"),
-                ("namedSub", Json.mkObj [
-                  ("#lvalue", Json.mkObj [("id", "1")]),
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-                  ("identifier", Json.mkObj [("id", s!"{functionName}::x")]),
-                  ("type", mkIntType)
-                ])
-              ],
-              Json.mkObj [
-                ("id", "symbol"),
-                ("namedSub", Json.mkObj [
-                  ("#lvalue", Json.mkObj [("id", "1")]),
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "6"),
-                  ("identifier", Json.mkObj [("id", s!"{functionName}::y")]),
-                  ("type", mkIntType)
-                ])
-              ]
-            ])
-          ]
-        ])
-      ]
-    ])
+  let assignStmt := mkCodeBlock "expression" "6" functionName #[
+    mkSideEffect "assign" "6" functionName mkIntType #[
+      mkLvalueSymbol s!"{functionName}::1::z" "6" functionName,
+      mkBinaryOp "+" "6" functionName
+        (mkLvalueSymbol s!"{functionName}::x" "6" functionName)
+        (mkLvalueSymbol s!"{functionName}::y" "6" functionName)
+    ]
   ]
 
   -- Assert: __CPROVER_assert(z > x, "test_assert");
-  let assertStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-      ("statement", Json.mkObj [("id", "expression")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", "side_effect"),
+  let assertStmt := mkCodeBlock "expression" "7" functionName #[
+    mkSideEffect "function_call" "7" functionName
+      (Json.mkObj [
+        ("id", "empty"),
         ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
+        ])
+      ]) #[
+      Json.mkObj [
+        ("id", "symbol"),
+        ("namedSub", Json.mkObj [
+          ("#lvalue", Json.mkObj [("id", "1")]),
           ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-          ("statement", Json.mkObj [("id", "function_call")]),
-          ("type", Json.mkObj [
-            ("id", "empty"),
-            ("namedSub", Json.mkObj [
-              ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-            ])
-          ])
-        ]),
+          ("identifier", Json.mkObj [("id", "__CPROVER_assert")]),
+          ("type", mkBuiltinFunction "__CPROVER_assert" #[mkAssertParam, mkStringParam])
+        ])
+      ],
+      Json.mkObj [
+        ("id", "arguments"),
         ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "symbol"),
-            ("namedSub", Json.mkObj [
-              ("#lvalue", Json.mkObj [("id", "1")]),
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-              ("identifier", Json.mkObj [("id", "__CPROVER_assert")]),
-              ("type", Json.mkObj [
-                ("id", "code"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20"),
-                  ("parameters", Json.mkObj [
-                    ("id", ""),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "parameter"),
-                        ("namedSub", Json.mkObj [
-                          ("#base_name", Json.mkObj [("id", "assertion")]),
-                          ("#identifier", Json.mkObj [("id", "")]),
-                          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
-                          ("type", Json.mkObj [("id", "bool")])
-                        ])
-                      ],
-                      Json.mkObj [
-                        ("id", "parameter"),
-                        ("namedSub", Json.mkObj [
-                          ("#base_name", Json.mkObj [("id", "description")]),
-                          ("#identifier", Json.mkObj [("id", "")]),
-                          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
-                          ("type", Json.mkObj [
-                            ("id", "pointer"),
-                            ("namedSub", Json.mkObj [
-                              ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assert" "20"),
-                              ("width", Json.mkObj [("id", "64")])
-                            ]),
-                            ("sub", Json.arr #[
-                              Json.mkObj [
-                                ("id", "signedbv"),
-                                ("namedSub", Json.mkObj [
-                                  ("#c_type", Json.mkObj [("id", "char")]),
-                                  ("#constant", Json.mkObj [("id", "1")]),
-                                  ("width", Json.mkObj [("id", "8")])
-                                ])
-                              ]
-                            ])
-                          ])
-                        ])
-                      ]
-                    ])
-                  ]),
-                  ("return_type", Json.mkObj [
-                    ("id", "empty"),
-                    ("namedSub", Json.mkObj [
-                      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-                    ])
-                  ])
-                ])
-              ])
-            ])
-          ],
-          Json.mkObj [
-            ("id", "arguments"),
-            ("sub", Json.arr #[
-              Json.mkObj [
-                ("id", ">"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-                  ("type", Json.mkObj [("id", "bool")])
-                ]),
-                ("sub", Json.arr #[
-                  Json.mkObj [
-                    ("id", "symbol"),
-                    ("namedSub", Json.mkObj [
-                      ("#lvalue", Json.mkObj [("id", "1")]),
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-                      ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                      ("type", mkIntType)
-                    ])
-                  ],
-                  Json.mkObj [
-                    ("id", "symbol"),
-                    ("namedSub", Json.mkObj [
-                      ("#lvalue", Json.mkObj [("id", "1")]),
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-                      ("identifier", Json.mkObj [("id", s!"{functionName}::x")]),
-                      ("type", mkIntType)
-                    ])
-                  ]
-                ])
-              ],
-              Json.mkObj [
-                ("id", "address_of"),
-                ("namedSub", Json.mkObj [
-                  ("type", Json.mkObj [
-                    ("id", "pointer"),
-                    ("namedSub", Json.mkObj [("width", Json.mkObj [("id", "64")])]),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "signedbv"),
-                        ("namedSub", Json.mkObj [
-                          ("#c_type", Json.mkObj [("id", "char")]),
-                          ("width", Json.mkObj [("id", "8")])
-                        ])
-                      ]
-                    ])
-                  ])
-                ]),
-                ("sub", Json.arr #[
-                  Json.mkObj [
-                    ("id", "index"),
-                    ("namedSub", Json.mkObj [
-                      ("type", Json.mkObj [
-                        ("id", "signedbv"),
-                        ("namedSub", Json.mkObj [
-                          ("#c_type", Json.mkObj [("id", "char")]),
-                          ("width", Json.mkObj [("id", "8")])
-                        ])
-                      ])
-                    ]),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "string_constant"),
-                        ("namedSub", Json.mkObj [
-                          ("#lvalue", Json.mkObj [("id", "1")]),
-                          ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-                          ("type", Json.mkObj [
-                            ("id", "array"),
-                            ("namedSub", Json.mkObj [
-                              ("size", Json.mkObj [
-                                ("id", "constant"),
-                                ("namedSub", Json.mkObj [
-                                  ("type", Json.mkObj [
-                                    ("id", "signedbv"),
-                                    ("namedSub", Json.mkObj [
-                                      ("#c_type", Json.mkObj [("id", "signed_long_int")]),
-                                      ("width", Json.mkObj [("id", "64")])
-                                    ])
-                                  ]),
-                                  ("value", Json.mkObj [("id", "C")])
-                                ])
-                              ])
-                            ]),
-                            ("sub", Json.arr #[
-                              Json.mkObj [
-                                ("id", "signedbv"),
-                                ("namedSub", Json.mkObj [
-                                  ("#c_type", Json.mkObj [("id", "char")]),
-                                  ("width", Json.mkObj [("id", "8")])
-                                ])
-                              ]
-                            ])
-                          ]),
-                          ("value", Json.mkObj [("id", "test_assert")])
-                        ])
-                      ],
-                      Json.mkObj [
-                        ("id", "constant"),
-                        ("namedSub", Json.mkObj [
-                          ("type", Json.mkObj [
-                            ("id", "signedbv"),
-                            ("namedSub", Json.mkObj [
-                              ("#c_type", Json.mkObj [("id", "signed_long_int")]),
-                              ("width", Json.mkObj [("id", "64")])
-                            ])
-                          ]),
-                          ("value", Json.mkObj [("id", "0")])
-                        ])
-                      ]
-                    ])
-                  ]
-                ])
-              ]
-            ])
-          ]
+          mkComparison ">" "7" functionName
+            (mkLvalueSymbol s!"{functionName}::1::z" "7" functionName)
+            (mkLvalueSymbol s!"{functionName}::x" "7" functionName),
+          mkStringConstant "test_assert" "7" functionName
         ])
       ]
-    ])
+    ]
   ]
 
   -- If statement: if(z > 10) { z = z - 1; } else { z = z + 1; }
@@ -625,25 +636,9 @@ def createImplementationSymbol (functionName : String) : CBMCSymbol :=
       ("type", Json.mkObj [("id", "empty")])
     ]),
     ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", ">"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "8"),
-          ("type", Json.mkObj [("id", "bool")])
-        ]),
-        ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "symbol"),
-            ("namedSub", Json.mkObj [
-              ("#lvalue", Json.mkObj [("id", "1")]),
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "8"),
-              ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-              ("type", mkIntType)
-            ])
-          ],
-          mkConstant "A" "10" (mkSourceLocation "from_andrew.c" functionName "8")
-        ])
-      ],
+      mkComparison ">" "8" functionName
+        (mkLvalueSymbol s!"{functionName}::1::z" "8" functionName)
+        (mkConstant "A" "10" (mkSourceLocation "from_andrew.c" functionName "8")),
       Json.mkObj [
         ("id", "code"),
         ("namedSub", Json.mkObj [
@@ -653,53 +648,13 @@ def createImplementationSymbol (functionName : String) : CBMCSymbol :=
           ("type", Json.mkObj [("id", "empty")])
         ]),
         ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "code"),
-            ("namedSub", Json.mkObj [
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "9"),
-              ("statement", Json.mkObj [("id", "expression")]),
-              ("type", Json.mkObj [("id", "empty")])
-            ]),
-            ("sub", Json.arr #[
-              Json.mkObj [
-                ("id", "side_effect"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "9"),
-                  ("statement", Json.mkObj [("id", "assign")]),
-                  ("type", mkIntType)
-                ]),
-                ("sub", Json.arr #[
-                  Json.mkObj [
-                    ("id", "symbol"),
-                    ("namedSub", Json.mkObj [
-                      ("#lvalue", Json.mkObj [("id", "1")]),
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "9"),
-                      ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                      ("type", mkIntType)
-                    ])
-                  ],
-                  Json.mkObj [
-                    ("id", "-"),
-                    ("namedSub", Json.mkObj [
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "9"),
-                      ("type", mkIntType)
-                    ]),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "symbol"),
-                        ("namedSub", Json.mkObj [
-                          ("#lvalue", Json.mkObj [("id", "1")]),
-                          ("#source_location", mkSourceLocation "from_andrew.c" functionName "9"),
-                          ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                          ("type", mkIntType)
-                        ])
-                      ],
-                      mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "9")
-                    ])
-                  ]
-                ])
-              ]
-            ])
+          mkCodeBlock "expression" "9" functionName #[
+            mkSideEffect "assign" "9" functionName mkIntType #[
+              mkLvalueSymbol s!"{functionName}::1::z" "9" functionName,
+              mkBinaryOp "-" "9" functionName
+                (mkLvalueSymbol s!"{functionName}::1::z" "9" functionName)
+                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "9"))
+            ]
           ]
         ])
       ],
@@ -712,53 +667,13 @@ def createImplementationSymbol (functionName : String) : CBMCSymbol :=
           ("type", Json.mkObj [("id", "empty")])
         ]),
         ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "code"),
-            ("namedSub", Json.mkObj [
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "11"),
-              ("statement", Json.mkObj [("id", "expression")]),
-              ("type", Json.mkObj [("id", "empty")])
-            ]),
-            ("sub", Json.arr #[
-              Json.mkObj [
-                ("id", "side_effect"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "11"),
-                  ("statement", Json.mkObj [("id", "assign")]),
-                  ("type", mkIntType)
-                ]),
-                ("sub", Json.arr #[
-                  Json.mkObj [
-                    ("id", "symbol"),
-                    ("namedSub", Json.mkObj [
-                      ("#lvalue", Json.mkObj [("id", "1")]),
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "11"),
-                      ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                      ("type", mkIntType)
-                    ])
-                  ],
-                  Json.mkObj [
-                    ("id", "+"),
-                    ("namedSub", Json.mkObj [
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "11"),
-                      ("type", mkIntType)
-                    ]),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "symbol"),
-                        ("namedSub", Json.mkObj [
-                          ("#lvalue", Json.mkObj [("id", "1")]),
-                          ("#source_location", mkSourceLocation "from_andrew.c" functionName "11"),
-                          ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                          ("type", mkIntType)
-                        ])
-                      ],
-                      mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "11")
-                    ])
-                  ]
-                ])
-              ]
-            ])
+          mkCodeBlock "expression" "11" functionName #[
+            mkSideEffect "assign" "11" functionName mkIntType #[
+              mkLvalueSymbol s!"{functionName}::1::z" "11" functionName,
+              mkBinaryOp "+" "11" functionName
+                (mkLvalueSymbol s!"{functionName}::1::z" "11" functionName)
+                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "11"))
+            ]
           ]
         ])
       ]
@@ -766,101 +681,37 @@ def createImplementationSymbol (functionName : String) : CBMCSymbol :=
   ]
 
   -- Assume: __CPROVER_assume(z > 0);
-  let assumeStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-      ("statement", Json.mkObj [("id", "expression")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      Json.mkObj [
-        ("id", "side_effect"),
+  let assumeStmt := mkCodeBlock "expression" "13" functionName #[
+    mkSideEffect "function_call" "13" functionName
+      (Json.mkObj [
+        ("id", "empty"),
         ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
+        ])
+      ]) #[
+      Json.mkObj [
+        ("id", "symbol"),
+        ("namedSub", Json.mkObj [
+          ("#lvalue", Json.mkObj [("id", "1")]),
           ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-          ("statement", Json.mkObj [("id", "function_call")]),
-          ("type", Json.mkObj [
-            ("id", "empty"),
-            ("namedSub", Json.mkObj [
-              ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-            ])
-          ])
-        ]),
+          ("identifier", Json.mkObj [("id", "__CPROVER_assume")]),
+          ("type", mkBuiltinFunction "__CPROVER_assume" #[mkAssumeParam])
+        ])
+      ],
+      Json.mkObj [
+        ("id", "arguments"),
         ("sub", Json.arr #[
-          Json.mkObj [
-            ("id", "symbol"),
-            ("namedSub", Json.mkObj [
-              ("#lvalue", Json.mkObj [("id", "1")]),
-              ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-              ("identifier", Json.mkObj [("id", "__CPROVER_assume")]),
-              ("type", Json.mkObj [
-                ("id", "code"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20"),
-                  ("parameters", Json.mkObj [
-                    ("id", ""),
-                    ("sub", Json.arr #[
-                      Json.mkObj [
-                        ("id", "parameter"),
-                        ("namedSub", Json.mkObj [
-                          ("#base_name", Json.mkObj [("id", "assumption")]),
-                          ("#identifier", Json.mkObj [("id", "")]),
-                          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "__CPROVER_assume" "20"),
-                          ("type", Json.mkObj [("id", "bool")])
-                        ])
-                      ]
-                    ])
-                  ]),
-                  ("return_type", Json.mkObj [
-                    ("id", "empty"),
-                    ("namedSub", Json.mkObj [
-                      ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-                    ])
-                  ])
-                ])
-              ])
-            ])
-          ],
-          Json.mkObj [
-            ("id", "arguments"),
-            ("sub", Json.arr #[
-              Json.mkObj [
-                ("id", ">"),
-                ("namedSub", Json.mkObj [
-                  ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-                  ("type", Json.mkObj [("id", "bool")])
-                ]),
-                ("sub", Json.arr #[
-                  Json.mkObj [
-                    ("id", "symbol"),
-                    ("namedSub", Json.mkObj [
-                      ("#lvalue", Json.mkObj [("id", "1")]),
-                      ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-                      ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-                      ("type", mkIntType)
-                    ])
-                  ],
-                  mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "13")
-                ])
-              ]
-            ])
-          ]
+          mkComparison ">" "13" functionName
+            (mkLvalueSymbol s!"{functionName}::1::z" "13" functionName)
+            (mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "13"))
         ])
       ]
-    ])
+    ]
   ]
 
   -- Return statement: return 0;
-  let returnStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "14"),
-      ("statement", Json.mkObj [("id", "return")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "14")
-    ])
+  let returnStmt := mkCodeBlock "return" "14" functionName #[
+    mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "14")
   ]
 
   let implValue := Json.mkObj [
