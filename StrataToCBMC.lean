@@ -38,8 +38,6 @@ def SimpleTestEnvAST := TransM.run (translateProgram (SimpleTestEnv.commands))
 
 def myFunc : Strata.C_Simp.Function := SimpleTestEnvAST.fst.funcs.head!
 
-#check myFunc
-
 open Lean
 
 -- Simple structure to hold any JSON node
@@ -750,17 +748,28 @@ instance : ToJson (Map String CBMCSymbol) where
   toJson m := Json.mkObj (m.map fun (k, v) => (k, toJson v))
 
 def testSymbols : IO Unit := do
-  let contractSymbol := createContractSymbol "simpleTest"
-  let implSymbol := createImplementationSymbol "simpleTest"
-  let xSymbol := createParameterSymbol "x"
-  let ySymbol := createParameterSymbol "y"
+  -- Generate symbols using AST data
+  let contractSymbol := createContractSymbol myFunc.name
+  let implSymbol := createImplementationSymbol myFunc.name
+
+  -- Get parameter names from AST
+  let paramNames := myFunc.inputs.keys
+
+  -- Hardcode local variable for now
   let zSymbol := createLocalSymbol "z"
 
-  let m : Map String CBMCSymbol := [("contract::simpleTest", contractSymbol),
-                                    ("simpleTest", implSymbol),
-                                    ("simpleTest::x", xSymbol),
-                                    ("simpleTest::y", ySymbol),
-                                    ("simpleTest::1::z", zSymbol)]
+  -- Build symbol map
+  let mut m : Map String CBMCSymbol := Map.empty
+  m := m.insert s!"contract::{myFunc.name}" contractSymbol
+  m := m.insert myFunc.name implSymbol
+
+  -- Add parameter symbols
+  for paramName in paramNames do
+    let paramSymbol := createParameterSymbol paramName
+    m := m.insert s!"{myFunc.name}::{paramName}" paramSymbol
+
+  -- Add local variable
+  m := m.insert s!"{myFunc.name}::1::z" zSymbol
 
   IO.println (toString (toJson m))
 
