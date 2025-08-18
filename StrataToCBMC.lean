@@ -414,195 +414,7 @@ def mkStringConstant (value : String) (line : String) (functionName : String) : 
     ])
   ]
 
-def createImplementationSymbol (functionName : String) : CBMCSymbol :=
-  let location : Location := {
-    id := "",
-    namedSub := some (Json.mkObj [
-      ("file", Json.mkObj [("id", "from_andrew.c")]),
-      ("function", Json.mkObj [("id", "")]),
-      ("line", Json.mkObj [("id", "1")]),
-      ("working_directory", Json.mkObj [("id", "/home/ub-backup/tautschn/cbmc-github.git")])
-    ])
-  }
 
-  let implType := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" "" "1"),
-      ("parameters", Json.mkObj [
-        ("id", ""),
-        ("sub", Json.arr #[
-          mkParameter "x" functionName "1",
-          mkParameter "y" functionName "1"
-        ])
-      ]),
-      ("return_type", mkIntType)
-    ])
-  ]
-
-  -- Variable declaration: signed int z;
-  let declStmt := mkCodeBlock "decl" "5" functionName #[
-    Json.mkObj [
-      ("id", "symbol"),
-      ("namedSub", Json.mkObj [
-        ("#source_location", mkSourceLocation "from_andrew.c" functionName "5"),
-        ("identifier", Json.mkObj [("id", s!"{functionName}::1::z")]),
-        ("type", mkIntType)
-      ])
-    ]
-  ]
-
-  -- Assignment: z = x + y;
-  let assignStmt := mkCodeBlock "expression" "6" functionName #[
-    mkSideEffect "assign" "6" functionName mkIntType #[
-      mkLvalueSymbol s!"{functionName}::1::z" "6" functionName,
-      mkBinaryOp "+" "6" functionName
-        (mkLvalueSymbol s!"{functionName}::x" "6" functionName)
-        (mkLvalueSymbol s!"{functionName}::y" "6" functionName)
-    ]
-  ]
-
-  -- Assert: __CPROVER_assert(z > x, "test_assert");
-  let assertStmt := mkCodeBlock "expression" "7" functionName #[
-    mkSideEffect "function_call" "7" functionName
-      (Json.mkObj [
-        ("id", "empty"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-        ])
-      ]) #[
-      Json.mkObj [
-        ("id", "symbol"),
-        ("namedSub", Json.mkObj [
-          ("#lvalue", Json.mkObj [("id", "1")]),
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "7"),
-          ("identifier", Json.mkObj [("id", "__CPROVER_assert")]),
-          ("type", mkBuiltinFunction "__CPROVER_assert" #[mkAssertParam, mkStringParam])
-        ])
-      ],
-      Json.mkObj [
-        ("id", "arguments"),
-        ("sub", Json.arr #[
-          mkComparison ">" "7" functionName
-            (mkLvalueSymbol s!"{functionName}::1::z" "7" functionName)
-            (mkLvalueSymbol s!"{functionName}::x" "7" functionName),
-          mkStringConstant "test_assert" "7" functionName
-        ])
-      ]
-    ]
-  ]
-
-  -- If statement: if(z > 10) { z = z - 1; } else { z = z + 1; }
-  let ifStmt := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "8"),
-      ("statement", Json.mkObj [("id", "ifthenelse")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[
-      mkComparison ">" "8" functionName
-        (mkLvalueSymbol s!"{functionName}::1::z" "8" functionName)
-        (mkConstant "A" "10" (mkSourceLocation "from_andrew.c" functionName "8")),
-      Json.mkObj [
-        ("id", "code"),
-        ("namedSub", Json.mkObj [
-          ("#end_location", mkSourceLocation "from_andrew.c" functionName "10"),
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "8"),
-          ("statement", Json.mkObj [("id", "block")]),
-          ("type", Json.mkObj [("id", "empty")])
-        ]),
-        ("sub", Json.arr #[
-          mkCodeBlock "expression" "9" functionName #[
-            mkSideEffect "assign" "9" functionName mkIntType #[
-              mkLvalueSymbol s!"{functionName}::1::z" "9" functionName,
-              mkBinaryOp "-" "9" functionName
-                (mkLvalueSymbol s!"{functionName}::1::z" "9" functionName)
-                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "9"))
-            ]
-          ]
-        ])
-      ],
-      Json.mkObj [
-        ("id", "code"),
-        ("namedSub", Json.mkObj [
-          ("#end_location", mkSourceLocation "from_andrew.c" functionName "12"),
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "10"),
-          ("statement", Json.mkObj [("id", "block")]),
-          ("type", Json.mkObj [("id", "empty")])
-        ]),
-        ("sub", Json.arr #[
-          mkCodeBlock "expression" "11" functionName #[
-            mkSideEffect "assign" "11" functionName mkIntType #[
-              mkLvalueSymbol s!"{functionName}::1::z" "11" functionName,
-              mkBinaryOp "+" "11" functionName
-                (mkLvalueSymbol s!"{functionName}::1::z" "11" functionName)
-                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" functionName "11"))
-            ]
-          ]
-        ])
-      ]
-    ])
-  ]
-
-  -- Assume: __CPROVER_assume(z > 0);
-  let assumeStmt := mkCodeBlock "expression" "13" functionName #[
-    mkSideEffect "function_call" "13" functionName
-      (Json.mkObj [
-        ("id", "empty"),
-        ("namedSub", Json.mkObj [
-          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
-        ])
-      ]) #[
-      Json.mkObj [
-        ("id", "symbol"),
-        ("namedSub", Json.mkObj [
-          ("#lvalue", Json.mkObj [("id", "1")]),
-          ("#source_location", mkSourceLocation "from_andrew.c" functionName "13"),
-          ("identifier", Json.mkObj [("id", "__CPROVER_assume")]),
-          ("type", mkBuiltinFunction "__CPROVER_assume" #[mkAssumeParam])
-        ])
-      ],
-      Json.mkObj [
-        ("id", "arguments"),
-        ("sub", Json.arr #[
-          mkComparison ">" "13" functionName
-            (mkLvalueSymbol s!"{functionName}::1::z" "13" functionName)
-            (mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "13"))
-        ])
-      ]
-    ]
-  ]
-
-  -- Return statement: return 0;
-  let returnStmt := mkCodeBlock "return" "14" functionName #[
-    mkConstant "0" "10" (mkSourceLocation "from_andrew.c" functionName "14")
-  ]
-
-  let implValue := Json.mkObj [
-    ("id", "code"),
-    ("namedSub", Json.mkObj [
-      ("#end_location", mkSourceLocation "from_andrew.c" functionName "15"),
-      ("#source_location", mkSourceLocation "from_andrew.c" functionName "4"),
-      ("statement", Json.mkObj [("id", "block")]),
-      ("type", Json.mkObj [("id", "empty")])
-    ]),
-    ("sub", Json.arr #[declStmt, assignStmt, assertStmt, ifStmt, assumeStmt, returnStmt])
-  ]
-
-  {
-    baseName := functionName,
-    isLvalue := true,
-    location := location,
-    mode := "C",
-    module := "from_andrew",
-    name := functionName,
-    prettyName := functionName,
-    prettyType := "signed int (signed int x, signed int y)",
-    prettyValue := "{\n  signed int z;\n  z = x + y;\n  __CPROVER_assert(z > x, \"test_assert\");\n  if(z > 10)\n  {\n    z = z - 1;\n  }\n\n  else\n  {\n    z = z + 1;\n  }\n  __CPROVER_assume(z > 0);\n  return 0;\n}",
-    type := implType,
-    value := implValue
-  }
 
 def createParameterSymbol (baseName : String) : CBMCSymbol :=
   createSymbol baseName "1" true true "simpleTest::"
@@ -614,7 +426,7 @@ def createLocalSymbol (baseName : String) : CBMCSymbol :=
 instance : ToJson (Map String CBMCSymbol) where
   toJson m := Json.mkObj (m.map fun (k, v) => (k, toJson v))
 
--- Convert LExpr to CBMC JSON format
+-- Convert LExpr to CBMC JSON format for contracts
 def lexprToCBMC (expr : Strata.C_Simp.Expression.Expr) (functionName : String) : Json :=
   match expr with
   | .app (.app (.op "Int.Gt" _) (.fvar varName _)) (.const value _) =>
@@ -750,10 +562,196 @@ def createContractSymbolFromAST (func : Strata.C_Simp.Function) : CBMCSymbol :=
     value := Json.mkObj [("id", "nil")]
   }
 
+def createImplementationSymbolFromAST (func : Strata.C_Simp.Function) : CBMCSymbol :=
+  let location : Location := {
+    namedSub := some (Json.mkObj [
+      ("file", Json.mkObj [("id", "from_andrew.c")]),
+      ("function", Json.mkObj [("id", "")]),
+      ("line", Json.mkObj [("id", "1")]),
+      ("working_directory", Json.mkObj [("id", "/home/ub-backup/tautschn/cbmc-github.git")])
+    ])
+  }
+
+  let parameters := Json.mkObj [
+    ("id", ""),
+    ("sub", Json.arr #[
+      mkParameter "x" func.name "1",
+      mkParameter "y" func.name "1"
+    ])
+  ]
+
+  let implType := Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" "" "1"),
+      ("parameters", parameters),
+      ("return_type", mkIntType)
+    ])
+  ]
+
+  -- For now, keep the hardcoded implementation but use function name from AST
+  let declStmt := mkCodeBlock "decl" "5" func.name #[
+    Json.mkObj [
+      ("id", "symbol"),
+      ("namedSub", Json.mkObj [
+        ("#source_location", mkSourceLocation "from_andrew.c" func.name "5"),
+        ("identifier", Json.mkObj [("id", s!"{func.name}::1::z")]),
+        ("type", mkIntType)
+      ])
+    ]
+  ]
+
+  let assignStmt := mkCodeBlock "expression" "6" func.name #[
+    mkSideEffect "assign" "6" func.name mkIntType #[
+      mkLvalueSymbol s!"{func.name}::1::z" "6" func.name,
+      mkBinaryOp "+" "6" func.name
+        (mkLvalueSymbol s!"{func.name}::x" "6" func.name)
+        (mkLvalueSymbol s!"{func.name}::y" "6" func.name)
+    ]
+  ]
+
+  let assertStmt := mkCodeBlock "expression" "7" func.name #[
+    mkSideEffect "function_call" "7" func.name
+      (Json.mkObj [
+        ("id", "empty"),
+        ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
+        ])
+      ]) #[
+      Json.mkObj [
+        ("id", "symbol"),
+        ("namedSub", Json.mkObj [
+          ("#lvalue", Json.mkObj [("id", "1")]),
+          ("#source_location", mkSourceLocation "from_andrew.c" func.name "7"),
+          ("identifier", Json.mkObj [("id", "__CPROVER_assert")]),
+          ("type", mkBuiltinFunction "__CPROVER_assert" #[mkAssertParam, mkStringParam])
+        ])
+      ],
+      Json.mkObj [
+        ("id", "arguments"),
+        ("sub", Json.arr #[
+          mkComparison ">" "7" func.name
+            (mkLvalueSymbol s!"{func.name}::1::z" "7" func.name)
+            (mkLvalueSymbol s!"{func.name}::x" "7" func.name),
+          mkStringConstant "test_assert" "7" func.name
+        ])
+      ]
+    ]
+  ]
+
+  let ifStmt := Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#source_location", mkSourceLocation "from_andrew.c" func.name "8"),
+      ("statement", Json.mkObj [("id", "ifthenelse")]),
+      ("type", Json.mkObj [("id", "empty")])
+    ]),
+    ("sub", Json.arr #[
+      mkComparison ">" "8" func.name
+        (mkLvalueSymbol s!"{func.name}::1::z" "8" func.name)
+        (mkConstant "A" "10" (mkSourceLocation "from_andrew.c" func.name "8")),
+      Json.mkObj [
+        ("id", "code"),
+        ("namedSub", Json.mkObj [
+          ("#end_location", mkSourceLocation "from_andrew.c" func.name "10"),
+          ("#source_location", mkSourceLocation "from_andrew.c" func.name "8"),
+          ("statement", Json.mkObj [("id", "block")]),
+          ("type", Json.mkObj [("id", "empty")])
+        ]),
+        ("sub", Json.arr #[
+          mkCodeBlock "expression" "9" func.name #[
+            mkSideEffect "assign" "9" func.name mkIntType #[
+              mkLvalueSymbol s!"{func.name}::1::z" "9" func.name,
+              mkBinaryOp "-" "9" func.name
+                (mkLvalueSymbol s!"{func.name}::1::z" "9" func.name)
+                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" func.name "9"))
+            ]
+          ]
+        ])
+      ],
+      Json.mkObj [
+        ("id", "code"),
+        ("namedSub", Json.mkObj [
+          ("#end_location", mkSourceLocation "from_andrew.c" func.name "12"),
+          ("#source_location", mkSourceLocation "from_andrew.c" func.name "10"),
+          ("statement", Json.mkObj [("id", "block")]),
+          ("type", Json.mkObj [("id", "empty")])
+        ]),
+        ("sub", Json.arr #[
+          mkCodeBlock "expression" "11" func.name #[
+            mkSideEffect "assign" "11" func.name mkIntType #[
+              mkLvalueSymbol s!"{func.name}::1::z" "11" func.name,
+              mkBinaryOp "+" "11" func.name
+                (mkLvalueSymbol s!"{func.name}::1::z" "11" func.name)
+                (mkConstant "1" "10" (mkSourceLocation "from_andrew.c" func.name "11"))
+            ]
+          ]
+        ])
+      ]
+    ])
+  ]
+
+  let assumeStmt := mkCodeBlock "expression" "13" func.name #[
+    mkSideEffect "function_call" "13" func.name
+      (Json.mkObj [
+        ("id", "empty"),
+        ("namedSub", Json.mkObj [
+          ("#source_location", mkSourceLocation "<builtin-architecture-strings>" "" "20")
+        ])
+      ]) #[
+      Json.mkObj [
+        ("id", "symbol"),
+        ("namedSub", Json.mkObj [
+          ("#lvalue", Json.mkObj [("id", "1")]),
+          ("#source_location", mkSourceLocation "from_andrew.c" func.name "13"),
+          ("identifier", Json.mkObj [("id", "__CPROVER_assume")]),
+          ("type", mkBuiltinFunction "__CPROVER_assume" #[mkAssumeParam])
+        ])
+      ],
+      Json.mkObj [
+        ("id", "arguments"),
+        ("sub", Json.arr #[
+          mkComparison ">" "13" func.name
+            (mkLvalueSymbol s!"{func.name}::1::z" "13" func.name)
+            (mkConstant "0" "10" (mkSourceLocation "from_andrew.c" func.name "13"))
+        ])
+      ]
+    ]
+  ]
+
+  let returnStmt := mkCodeBlock "return" "14" func.name #[
+    mkConstant "0" "10" (mkSourceLocation "from_andrew.c" func.name "14")
+  ]
+
+  let implValue := Json.mkObj [
+    ("id", "code"),
+    ("namedSub", Json.mkObj [
+      ("#end_location", mkSourceLocation "from_andrew.c" func.name "15"),
+      ("#source_location", mkSourceLocation "from_andrew.c" func.name "4"),
+      ("statement", Json.mkObj [("id", "block")]),
+      ("type", Json.mkObj [("id", "empty")])
+    ]),
+    ("sub", Json.arr #[declStmt, assignStmt, assertStmt, ifStmt, assumeStmt, returnStmt])
+  ]
+
+  {
+    baseName := func.name,
+    isLvalue := true,
+    location := location,
+    mode := "C",
+    module := "from_andrew",
+    name := func.name,
+    prettyName := func.name,
+    prettyType := s!"signed int (signed int {String.intercalate ", signed int " func.inputs.keys})",
+    prettyValue := "{\n  signed int z;\n  z = x + y;\n  __CPROVER_assert(z > x, \"test_assert\");\n  if(z > 10)\n  {\n    z = z - 1;\n  }\n\n  else\n  {\n    z = z + 1;\n  }\n  __CPROVER_assume(z > 0);\n  return 0;\n}",
+    type := implType,
+    value := implValue
+  }
+
 def testSymbols : IO Unit := do
   -- Generate symbols using AST data
   let contractSymbol := createContractSymbolFromAST myFunc
-  let implSymbol := createImplementationSymbol myFunc.name
+  let implSymbol := createImplementationSymbolFromAST myFunc
 
   -- Get parameter names from AST
   let paramNames := myFunc.inputs.keys
